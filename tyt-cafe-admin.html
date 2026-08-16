@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TYT Café — Admin</title>
+<style>
+body{margin:0;background:#111;color:#eee;font-family:Arial,sans-serif}.wrap{max-width:1000px;margin:auto;padding:24px 16px}
+.card{background:#1b1b1f;border:1px solid #333;border-radius:14px;padding:20px;margin-bottom:18px}
+input,select{width:100%;padding:12px;margin:6px 0 12px;box-sizing:border-box;background:#101014;color:#eee;border:1px solid #444;border-radius:8px}
+button{padding:11px 16px;border:0;border-radius:8px;cursor:pointer;font-weight:bold}.primary{background:#ff8a3d}.ghost{background:#333;color:#fff}.danger{background:#a52b3d;color:#fff}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.actions{display:flex;gap:8px;flex-wrap:wrap}.msg{margin-top:10px;color:#aaa}.error{color:#ff7777}.success{color:#7ee787}
+#admin{display:none}table{width:100%;border-collapse:collapse;margin-top:15px}th,td{padding:10px;border-bottom:1px solid #333;text-align:right}
+@media(max-width:700px){.grid{grid-template-columns:1fr}table{font-size:13px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<section id="login" class="card">
+<h1>☕ TYT Café Admin</h1>
+<p>سجّل الدخول بحساب الأدمن.</p>
+<form id="loginForm">
+<label>الإيميل</label><input id="email" type="email" required>
+<label>الباسورد</label><input id="password" type="password" required>
+<button class="primary" type="submit">دخول</button>
+<div id="loginMsg" class="msg"></div>
+</form>
+</section>
+<section id="admin">
+<div class="card">
+<h1>☕ TYT Café Admin</h1><div id="who" class="msg"></div>
+<button id="logout" class="ghost">تسجيل خروج</button>
+</div>
+<div class="card">
+<h2 id="formTitle">إضافة صنف</h2>
+<form id="menuForm">
+<input type="hidden" id="itemId">
+<div class="grid">
+<div><label>اسم الصنف *</label><input id="name" required></div>
+<div><label>السعر *</label><input id="price" required></div>
+<div><label>القسم *</label><select id="category" required>
+<option value="">اختار القسم</option><option>Hot Drinks</option><option>Cold Drinks</option><option>Coffee</option><option>Desserts</option><option>Food</option><option>Other</option>
+</select></div>
+<div><label>رابط الصورة (اختياري)</label><input id="image" type="url"></div>
+<div style="grid-column:1/-1"><label>الوصف (اختياري)</label><input id="description"></div>
+</div>
+<div class="actions"><button class="primary" type="submit">حفظ الصنف</button><button class="ghost" type="button" id="cancel" style="display:none">إلغاء</button></div>
+<div id="saveMsg" class="msg"></div>
+</form>
+</div>
+<div class="card"><h2>المنيو</h2><div id="count" class="msg">جاري التحميل...</div>
+<table><thead><tr><th>الصنف</th><th>السعر</th><th>القسم</th><th>الوصف</th><th>الإجراءات</th></tr></thead><tbody id="menuBody"></tbody></table>
+</div>
+</section>
+</div>
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+import{getAuth,signInWithEmailAndPassword,onAuthStateChanged,signOut}from"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+import{getFirestore,collection,addDoc,doc,updateDoc,deleteDoc,getDocs,serverTimestamp}from"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+const firebaseConfig={
+apiKey:"AIzaSyA_iRaVTZwvi25XabH_PfC8cKK_BeYYRPY",
+authDomain:"tyt-cafe-8c2ae.firebaseapp.com",
+projectId:"tyt-cafe-8c2ae",
+storageBucket:"tyt-cafe-8c2ae.firebasestorage.app",
+messagingSenderId:"298823761893",
+appId:"1:298823761893:web:7652134d929a5466c9f90c",
+measurementId:"G-FPYN8MT74C"
+};
+const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),$=id=>document.getElementById(id);
+$("loginForm").onsubmit=async e=>{e.preventDefault();$("loginMsg").textContent="جاري تسجيل الدخول...";try{await signInWithEmailAndPassword(auth,$("email").value.trim(),$("password").value);$("loginMsg").textContent=""}catch(err){$("loginMsg").className="msg error";$("loginMsg").textContent="فشل تسجيل الدخول: "+(err.code||err.message)}};
+$("logout").onclick=()=>signOut(auth);
+onAuthStateChanged(auth,user=>{if(user){$("login").style.display="none";$("admin").style.display="block";$("who").textContent="تم تسجيل الدخول: "+user.email;loadMenu()}else{$("login").style.display="block";$("admin").style.display="none"}});
+async function loadMenu(){try{const snap=await getDocs(collection(db,"menu"));$("count").textContent="عدد الأصناف: "+snap.size;$("menuBody").innerHTML="";if(snap.empty){$("menuBody").innerHTML="<tr><td colspan='5'>لسه مفيش أصناف. أضف أول صنف فوق.</td></tr>";return}snap.forEach(d=>{const x=d.data(),tr=document.createElement("tr");tr.innerHTML="<td><b>"+esc(x.name||"")+"</b></td><td>"+esc(String(x.price??""))+"</td><td>"+esc(x.category||"")+"</td><td>"+esc(x.description||"—")+"</td><td><button class='ghost' data-edit>تعديل</button> <button class='danger' data-delete>حذف</button></td>";tr.querySelector("[data-edit]").onclick=()=>editItem(d.id,x);tr.querySelector("[data-delete]").onclick=()=>removeItem(d.id,x.name||"الصنف");$("menuBody").appendChild(tr)})}catch(err){$("count").textContent="خطأ في Firestore";$("menuBody").innerHTML="<tr><td colspan='5' class='error'>"+esc(err.code||err.message)+"</td></tr>"}}
+$("menuForm").onsubmit=async e=>{e.preventDefault();const data={name:$("name").value.trim(),price:$("price").value.trim(),category:$("category").value,image:$("image").value.trim(),description:$("description").value.trim(),updatedAt:serverTimestamp()};$("saveMsg").textContent="جاري الحفظ...";try{const id=$("itemId").value;if(id)await updateDoc(doc(db,"menu",id),data);else await addDoc(collection(db,"menu"),{...data,createdAt:serverTimestamp()});$("saveMsg").className="msg success";$("saveMsg").textContent="تم الحفظ ✓";resetForm();loadMenu()}catch(err){$("saveMsg").className="msg error";$("saveMsg").textContent="فشل الحفظ: "+(err.code||err.message)}};
+function editItem(id,x){$("itemId").value=id;$("name").value=x.name||"";$("price").value=x.price||"";$("category").value=x.category||"";$("image").value=x.image||"";$("description").value=x.description||"";$("formTitle").textContent="تعديل الصنف";$("cancel").style.display="inline-block";scrollTo(0,0)}
+$("cancel").onclick=resetForm;function resetForm(){$("menuForm").reset();$("itemId").value="";$("formTitle").textContent="إضافة صنف";$("cancel").style.display="none"}
+async function removeItem(id,name){if(!confirm('متأكد إنك عايز تحذف "'+name+'"?'))return;try{await deleteDoc(doc(db,"menu",id));loadMenu()}catch(err){alert("فشل الحذف: "+(err.code||err.message))}}
+function esc(v){return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+</script>
+</body>
+</html>
