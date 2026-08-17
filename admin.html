@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TYT Café — Admin</title>
+<style>
+body{margin:0;background:#111;color:#eee;font-family:Arial,sans-serif}.wrap{max-width:1050px;margin:auto;padding:22px 16px}
+.card{background:#1b1b1f;border:1px solid #333;border-radius:14px;padding:20px;margin-bottom:18px}
+h1,h2{margin-top:0}input,select,textarea{width:100%;box-sizing:border-box;padding:11px;margin:6px 0 12px;background:#101014;color:#eee;border:1px solid #444;border-radius:8px}
+textarea{min-height:80px;resize:vertical}button{padding:10px 15px;border:0;border-radius:8px;cursor:pointer;font-weight:bold}.primary{background:#ff8a3d;color:#111}.ghost{background:#333;color:#fff}.danger{background:#a52b3d;color:#fff}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.full{grid-column:1/-1}.actions{display:flex;gap:8px;flex-wrap:wrap}.msg{color:#aaa;margin-top:10px}.error{color:#ff7777}.success{color:#7ee787}
+#app{display:none}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:15px}.tabs button.active{outline:2px solid #ff8a3d}
+.item{border:1px solid #333;border-radius:10px;padding:13px;margin:9px 0}.row{display:flex;justify-content:space-between;gap:10px;align-items:center}.small{font-size:13px;color:#aaa}
+.status{display:inline-block;padding:3px 8px;border-radius:999px;font-size:12px;margin-inline-start:6px}.on{background:#214d2d;color:#9ff0ad}.off{background:#4d2525;color:#ffb0b0}
+@media(max-width:700px){.grid{grid-template-columns:1fr}.full{grid-column:auto}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<section id="login" class="card">
+<h1>☕ TYT Café Admin</h1><p>دخول الأدمن.</p>
+<form id="loginForm"><label>الإيميل</label><input id="email" type="email" required>
+<label>الباسورد</label><input id="password" type="password" required>
+<button class="primary">دخول</button><div id="loginMsg" class="msg"></div></form>
+</section>
+
+<section id="app">
+<div class="card"><div class="row"><div><h1>☕ TYT Café Admin</h1><div id="who" class="small"></div></div><button id="logout" class="ghost">خروج</button></div></div>
+
+<div class="card">
+<h2>المنيو</h2>
+<div class="tabs"><button class="primary active" id="menuTab">الأصناف</button><button class="ghost" id="offersTab">العروض</button></div>
+<div id="menuPanel">
+<form id="menuForm"><input type="hidden" id="menuId"><input type="hidden" id="menuSourceKey"><div class="grid">
+<div><label>اسم الصنف *</label><input id="mName" required></div>
+<div><label>السعر *</label><input id="mPrice" required></div>
+<div><label>القسم *</label><input id="mCategory" placeholder="Coffee" required></div>
+<div><label>وصف</label><input id="mDescription"></div>
+<div class="full"><label>رابط الصورة (اختياري)</label><input id="mImage" type="url"></div>
+</div><div class="actions"><button class="primary">حفظ الصنف</button><button type="button" class="ghost" id="mCancel" hidden>إلغاء</button><button type="button" class="ghost" id="seedMenu">استيراد/استكمال المنيو الحالية إلى Firebase</button></div><div id="mMsg" class="msg"></div></form>
+<div id="menuList"></div>
+</div>
+
+<div id="offersPanel" hidden>
+<form id="offerForm"><input type="hidden" id="oId"><input type="hidden" id="oSourceKey"><div class="grid">
+<div><label>اسم العرض *</label><input id="oName" required></div>
+<div><label>السعر الجديد *</label><input id="oNew" required></div>
+<div><label>السعر القديم (اختياري)</label><input id="oOld"></div>
+<div><label>الخصم مثل -20%</label><input id="oDiscount"></div>
+<div><label>الشارة</label><input id="oBadge" placeholder="SPECIAL OFFER"></div>
+<div><label>نوع الشارة</label><select id="oStyle"><option value="special">special</option><option value="limited">limited</option></select></div>
+<div><label>الأيقونة (اختياري)</label><input id="oIcon" placeholder="☕"></div>
+<div><label>نص الزر</label><input id="oCta" placeholder="Order Now"></div>
+<div class="full"><label>الوصف</label><textarea id="oDesc"></textarea></div>
+<div class="full"><label>رابط الصورة (اختياري)</label><input id="oImage" type="url"></div>
+<div class="full"><label><input id="oActive" type="checkbox" checked style="width:auto;margin:0 7px 0 0"> العرض ظاهر على الموقع</label></div>
+</div><div class="actions"><button class="primary">حفظ العرض</button><button type="button" class="ghost" id="oCancel" hidden>إلغاء</button><button type="button" class="ghost" id="seedOffers">استيراد/استكمال العروض الحالية إلى Firebase</button></div><div id="oMsg" class="msg"></div></form>
+<div id="offerList"></div>
+</div>
+</div>
+</section></div>
+
+<script src="js/menu-data.js"></script><script src="js/offers-data.js"></script>
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+import{getAuth,signInWithEmailAndPassword,onAuthStateChanged,signOut}from"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+import{getFirestore,collection,addDoc,doc,updateDoc,deleteDoc,getDocs,serverTimestamp}from"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+const config={apiKey:"AIzaSyA_iRaVTZwvi25XabH_PfC8cKK_BeYYRPY",authDomain:"tyt-cafe-8c2ae.firebaseapp.com",projectId:"tyt-cafe-8c2ae",storageBucket:"tyt-cafe-8c2ae.firebasestorage.app",messagingSenderId:"298823761893",appId:"1:298823761893:web:7652134d929a5466c9f90c",measurementId:"G-FPYN8MT74C"};
+const app=initializeApp(config),auth=getAuth(app),db=getFirestore(app),$=x=>document.getElementById(x);
+const col=name=>collection(db,name);
+
+function slug(value){
+  return String(value||"").trim().toLowerCase()
+    .normalize("NFKD").replace(/[\u0300-\u036f]/g,"")
+    .replace(/[^a-z0-9\u0600-\u06ff]+/g,"-").replace(/^-+|-+$/g,"")||"item";
+}
+function menuSourceKey(categoryId,name){return `${slug(categoryId)}::${slug(name)}`;}
+function offerSourceKey(name){return slug(name);}
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function norm(v){return String(v??"").trim().toLowerCase().replace(/\s+/g," ");}
+
+$("loginForm").onsubmit=async e=>{
+  e.preventDefault();$("loginMsg").className="msg";$("loginMsg").textContent="جاري الدخول...";
+  try{await signInWithEmailAndPassword(auth,$("email").value.trim(),$("password").value);$("loginMsg").textContent=""}
+  catch(err){$("loginMsg").className="msg error";$("loginMsg").textContent=err.code||err.message}
+};
+$("logout").onclick=()=>signOut(auth);
+onAuthStateChanged(auth,u=>{
+  if(u){$("login").style.display="none";$("app").style.display="block";$("who").textContent=u.email;loadMenu();loadOffers()}
+  else{$("login").style.display="block";$("app").style.display="none"}
+});
+
+$("menuTab").onclick=()=>{$("menuPanel").hidden=false;$("offersPanel").hidden=true;$("menuTab").classList.add("active");$("offersTab").classList.remove("active")};
+$("offersTab").onclick=()=>{$("menuPanel").hidden=true;$("offersPanel").hidden=false;$("offersTab").classList.add("active");$("menuTab").classList.remove("active")};
+
+async function loadMenu(){
+  const box=$("menuList");box.innerHTML="جاري التحميل...";
+  try{
+    const s=await getDocs(col("menu"));
+    box.innerHTML=s.empty?"<div class='msg'>لا توجد أصناف بعد.</div>":"";
+    s.forEach(d=>{
+      const x=d.data(),el=document.createElement("div");el.className="item";
+      el.innerHTML=`<div class="row"><div><b>${esc(x.name||"")}</b><div class="small">${esc(x.category||"")} · ${esc(x.price||"")}</div></div><div><button class="ghost" data-edit>تعديل</button> <button class="danger" data-del>حذف</button></div></div><div class="small">${esc(x.description||"")}</div>`;
+      el.querySelector("[data-edit]").onclick=()=>editMenu(d.id,x);
+      el.querySelector("[data-del]").onclick=async()=>{
+        if(!confirm("حذف الصنف؟"))return;
+        try{await deleteDoc(doc(db,"menu",d.id));await loadMenu()}catch(e){$("mMsg").className="msg error";$("mMsg").textContent=e.code||e.message}
+      };
+      box.appendChild(el);
+    });
+  }catch(e){box.innerHTML=`<div class="error">${esc(e.code||e.message)}</div>`}
+}
+
+$("menuForm").onsubmit=async e=>{
+  e.preventDefault();
+  const id=$("menuId").value;
+  const existingSourceKey=$("menuSourceKey").value;
+  const category=$("mCategory").value.trim();
+  const name=$("mName").value.trim();
+  const data={
+    name,
+    price:$("mPrice").value.trim(),
+    category,
+    categoryId:slug(category),
+    description:$("mDescription").value.trim(),
+    image:$("mImage").value.trim(),
+    sourceKey:existingSourceKey||menuSourceKey(slug(category),name),
+    updatedAt:serverTimestamp()
+  };
+  try{
+    if(id)await updateDoc(doc(db,"menu",id),data);
+    else await addDoc(col("menu"),{...data,createdAt:serverTimestamp()});
+    $("mMsg").className="msg success";$("mMsg").textContent="تم الحفظ ✓";resetMenu();await loadMenu();
+  }catch(e){$("mMsg").className="msg error";$("mMsg").textContent=e.code||e.message}
+};
+
+function editMenu(id,x){
+  $("menuId").value=id;$("menuSourceKey").value=x.sourceKey||"";
+  $("mName").value=x.name||"";$("mPrice").value=x.price??"";
+  $("mCategory").value=x.category||"";$("mDescription").value=x.description||"";
+  $("mImage").value=x.image||"";$("mCancel").hidden=false;
+}
+function resetMenu(){$("menuForm").reset();$("menuId").value="";$("menuSourceKey").value="";$("mCancel").hidden=true}
+$("mCancel").onclick=resetMenu;
+
+/*
+ * Idempotent seed:
+ * - NEVER deletes existing Firestore documents.
+ * - NEVER overwrites an already-seeded/edited item.
+ * - Adds only missing source items.
+ * - Repairs legacy documents by attaching sourceKey when a safe match exists.
+ */
+$("seedMenu").onclick=async()=>{
+  if(!confirm("سيتم استكمال الأصناف الناقصة فقط، بدون حذف أو استبدال أي صنف موجود. نكمل؟"))return;
+  try{
+    $("mMsg").className="msg";$("mMsg").textContent="جاري استكمال المنيو...";
+    const snap=await getDocs(col("menu"));
+    const docs=[...snap.docs];
+    const used=new Set();
+    const byKey=new Map();
+    docs.forEach(d=>{const x=d.data();if(x.sourceKey)byKey.set(x.sourceKey,d)});
+
+    let added=0,repaired=0;
+    for(const category of MENU_DATA){
+      for(const item of category.items){
+        const key=menuSourceKey(category.id,item.name);
+        if(byKey.has(key)){used.add(byKey.get(key).id);continue}
+
+        const candidates=docs.filter(d=>{
+          if(used.has(d.id))return false;
+          const x=d.data();
+          const sameCategory=norm(x.categoryId||"")===norm(category.id)||norm(x.category||"")===norm(category.name);
+          return sameCategory;
+        });
+
+        const exact=candidates.find(d=>norm(d.data().name)===norm(item.name));
+        if(exact){
+          await updateDoc(doc(db,"menu",exact.id),{sourceKey:key,categoryId:category.id,updatedAt:serverTimestamp()});
+          used.add(exact.id);repaired++;continue;
+        }
+
+        const scored=candidates.map(d=>{
+          const x=d.data();
+          let score=0;
+          if(String(x.price??"")===String(item.price??""))score+=2;
+          if(norm(x.description)===norm(item.description||""))score+=2;
+          if(item.description&&norm(x.description).includes(norm(item.description)))score+=1;
+          return {d,score};
+        }).filter(v=>v.score>=4).sort((a,b)=>b.score-a.score);
+
+        if(scored.length===1|| (scored.length>1 && scored[0].score>scored[1].score)){
+          await updateDoc(doc(db,"menu",scored[0].d.id),{sourceKey:key,categoryId:category.id,updatedAt:serverTimestamp()});
+          used.add(scored[0].d.id);repaired++;continue;
+        }
+
+        await addDoc(col("menu"),{
+          name:item.name,price:item.price,category:category.name,categoryId:category.id,
+          description:item.description||"",note:item.note||"",image:item.image||"",
+          icon:category.icon||"extra",sourceKey:key,createdAt:serverTimestamp(),updatedAt:serverTimestamp()
+        });
+        added++;
+      }
+    }
+    $("mMsg").className="msg success";$("mMsg").textContent=`تم استكمال المنيو ✓ — أضيف ${added} وأُصلح ${repaired} بدون حذف أي بيانات.`;
+    await loadMenu();
+  }catch(e){$("mMsg").className="msg error";$("mMsg").textContent=e.code||e.message}
+};
+
+async function loadOffers(){
+  const box=$("offerList");box.innerHTML="جاري التحميل...";
+  try{
+    const s=await getDocs(col("offers"));
+    box.innerHTML=s.empty?"<div class='msg'>لا توجد عروض بعد.</div>":"";
+    s.forEach(d=>{
+      const x=d.data(),active=x.active!==false,el=document.createElement("div");el.className="item";
+      el.innerHTML=`<div class="row"><div><b>${esc(x.name||"")}</b><span class="status ${active?"on":"off"}">${active?"مفعل":"متوقف"}</span><div class="small">${esc(x.newPrice??"")} EGP ${x.oldPrice?` · القديم ${esc(x.oldPrice)} EGP`:""}</div></div><div><button class="ghost" data-edit>تعديل</button> <button class="danger" data-del>حذف</button></div></div><div class="small">${esc(x.description||"")}</div>`;
+      el.querySelector("[data-edit]").onclick=()=>editOffer(d.id,x);
+      el.querySelector("[data-del]").onclick=async()=>{
+        if(!confirm("حذف العرض؟"))return;
+        try{await deleteDoc(doc(db,"offers",d.id));await loadOffers()}catch(e){$("oMsg").className="msg error";$("oMsg").textContent=e.code||e.message}
+      };
+      box.appendChild(el);
+    });
+  }catch(e){box.innerHTML=`<div class="error">${esc(e.code||e.message)}</div>`}
+}
+
+$("offerForm").onsubmit=async e=>{
+  e.preventDefault();
+  const id=$("oId").value,existingSourceKey=$("oSourceKey").value,name=$("oName").value.trim();
+  const data={
+    name,newPrice:$("oNew").value.trim(),oldPrice:$("oOld").value.trim(),
+    discount:$("oDiscount").value.trim(),badge:$("oBadge").value.trim(),
+    badgeStyle:$("oStyle").value,icon:$("oIcon").value.trim(),
+    cta:$("oCta").value.trim(),description:$("oDesc").value.trim(),
+    image:$("oImage").value.trim(),active:$("oActive").checked,
+    sourceKey:existingSourceKey||offerSourceKey(name),updatedAt:serverTimestamp()
+  };
+  try{
+    if(id)await updateDoc(doc(db,"offers",id),data);
+    else await addDoc(col("offers"),{...data,createdAt:serverTimestamp()});
+    $("oMsg").className="msg success";$("oMsg").textContent="تم حفظ العرض ✓";resetOffer();await loadOffers();
+  }catch(e){$("oMsg").className="msg error";$("oMsg").textContent=e.code||e.message}
+};
+
+function editOffer(id,x){
+  $("oId").value=id;$("oSourceKey").value=x.sourceKey||"";
+  $("oName").value=x.name||"";$("oNew").value=x.newPrice??"";
+  $("oOld").value=x.oldPrice??"";$("oDiscount").value=x.discount||"";
+  $("oBadge").value=x.badge||"";$("oStyle").value=x.badgeStyle||"special";
+  $("oIcon").value=x.icon||"";$("oCta").value=x.cta||"Order Now";
+  $("oDesc").value=x.description||"";$("oImage").value=x.image||"";
+  $("oActive").checked=x.active!==false;$("oCancel").hidden=false;
+}
+function resetOffer(){$("offerForm").reset();$("oId").value="";$("oSourceKey").value="";$("oActive").checked=true;$("oCancel").hidden=true}
+$("oCancel").onclick=resetOffer;
+
+$("seedOffers").onclick=async()=>{
+  if(!confirm("سيتم استكمال العروض الناقصة فقط، بدون حذف أو استبدال أي عرض موجود. نكمل؟"))return;
+  try{
+    $("oMsg").className="msg";$("oMsg").textContent="جاري استكمال العروض...";
+    const snap=await getDocs(col("offers")),docs=[...snap.docs],used=new Set(),byKey=new Map();
+    docs.forEach(d=>{const x=d.data();if(x.sourceKey)byKey.set(x.sourceKey,d)});
+    let added=0,repaired=0;
+
+    for(const offer of OFFERS_DATA){
+      const key=offerSourceKey(offer.name);
+      if(byKey.has(key)){used.add(byKey.get(key).id);continue}
+
+      const candidates=docs.filter(d=>!used.has(d.id));
+      const exact=candidates.find(d=>norm(d.data().name)===norm(offer.name));
+      if(exact){
+        await updateDoc(doc(db,"offers",exact.id),{sourceKey:key,active:exact.data().active!==false,updatedAt:serverTimestamp()});
+        used.add(exact.id);repaired++;continue;
+      }
+
+      const scored=candidates.map(d=>{
+        const x=d.data();let score=0;
+        if(String(x.newPrice??"")===String(offer.newPrice??""))score+=2;
+        if(String(x.oldPrice??"")===String(offer.oldPrice??""))score+=2;
+        if(norm(x.description)===norm(offer.description||""))score+=2;
+        if(norm(x.badge)===norm(offer.badge||""))score+=1;
+        return {d,score};
+      }).filter(v=>v.score>=4).sort((a,b)=>b.score-a.score);
+
+      if(scored.length===1||(scored.length>1&&scored[0].score>scored[1].score)){
+        await updateDoc(doc(db,"offers",scored[0].d.id),{sourceKey:key,updatedAt:serverTimestamp()});
+        used.add(scored[0].d.id);repaired++;continue;
+      }
+
+      await addDoc(col("offers"),{...offer,active:offer.active!==false,sourceKey:key,createdAt:serverTimestamp(),updatedAt:serverTimestamp()});
+      added++;
+    }
+    $("oMsg").className="msg success";$("oMsg").textContent=`تم استكمال العروض ✓ — أضيف ${added} وأُصلح ${repaired} بدون حذف أي بيانات.`;
+    await loadOffers();
+  }catch(e){$("oMsg").className="msg error";$("oMsg").textContent=e.code||e.message}
+};
+</script>
+</body></html>
