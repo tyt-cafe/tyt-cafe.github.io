@@ -496,7 +496,7 @@
     }
   };
 
-  var BADGE_AR = { "new": "جديد", "best-seller": "⭐ الأكثر طلبًا", "popular": "الأكثر رواجًا" };
+  var BADGE_AR = { "new": "جديد", "best-seller": "<span class=\"badge-star\">⭐</span> الأكثر طلبًا", "popular": "الأكثر رواجًا" };
   var OFFER_BADGE_AR = { "SPECIAL OFFER": "عرض خاص", "LIMITED TIME": "لفترة محدودة" };
   var OFFER_CTA_AR = { "Order Now": "اطلب الآن", "View Offer": "شاهد العرض" };
 

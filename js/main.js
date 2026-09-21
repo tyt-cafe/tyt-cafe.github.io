@@ -562,7 +562,7 @@
       .replace(/ء/g, "");
   }
 
-  const BADGE_LABELS = { "new": "New", "best-seller": "⭐ Best Seller", "popular": "Popular" };
+  const BADGE_LABELS = { "new": "New", "best-seller": "<span class=\"badge-star\">⭐</span> Best Seller", "popular": "Popular" };
   function badgeHtml(item) {
     const key = String(item.badge || "none").trim().toLowerCase();
     const label = (window.TYT_I18N && window.TYT_I18N.translateBadgeLabel(key)) || BADGE_LABELS[key];

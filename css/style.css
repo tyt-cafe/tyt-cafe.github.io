@@ -763,9 +763,16 @@ html[dir="rtl"] .mobile-menu.open a { transform: translateX(0); }
 .about { padding: 40px 0 120px; background: var(--bg); }
 .about-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 70px;
   align-items: center;
+}
+.about-copy--full { max-width: 720px; margin: 0 auto; text-align: center; }
+.about-badge.about-badge--inline {
+  position: static;
+  margin: 0 auto 22px;
+  bottom: auto; right: auto; left: auto;
+  animation: spin-slow 16s linear infinite;
 }
 .about-visual {
   position: relative;
@@ -801,9 +808,11 @@ html[dir="rtl"] .mobile-menu.open a { transform: translateX(0); }
 .about-copy p { font-size: 16px; line-height: 1.75; color: var(--muted); margin-top: 18px; }
 .about-copy p:first-of-type { margin-top: 22px; }
 .about-quote {
-  margin-top: 30px;
-  padding-left: 22px;
-  border-left: 3px solid var(--secondary);
+  margin: 30px auto 0;
+  padding: 12px 22px;
+  border-top: 3px solid var(--secondary);
+  border-bottom: 3px solid var(--secondary);
+  display: inline-block;
   font-family: var(--font-display);
   font-style: italic;
   font-size: 21px;
@@ -1170,10 +1179,14 @@ html[dir="rtl"] .menu-search input { text-align: right; }
 }
 .menu-item-badge--new { background: linear-gradient(135deg, var(--secondary-light), #E9C67A); }
 .menu-item-badge--best-seller {
-  background: linear-gradient(135deg, var(--secondary-light), var(--secondary));
+  background: #FFD400;
   color: #241205;
   font-size: 8.5px;
   padding: 4px 10px;
+  border-color: rgba(0,0,0,0.15);
+}
+.menu-item-badge--best-seller .badge-star {
+  filter: drop-shadow(0 0 1px rgba(0,0,0,0.85)) drop-shadow(0 0 1px rgba(0,0,0,0.85));
 }
 .menu-item-badge--popular { background: linear-gradient(135deg, var(--primary), var(--primary-dim)); color: var(--text); border-color: rgba(255,255,255,0.18); }
 
