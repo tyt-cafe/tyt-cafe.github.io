@@ -1,0 +1,47 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // IMPORTANT: replace PUT_ADMIN_UID_HERE with the UID of your admin user
+    // (Firebase Console -> Authentication -> Users -> copy "User UID").
+    // Until you do, NO ONE can write (safe by default), and admin.html edits will fail.
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.uid in ["PUT_ADMIN_UID_HERE"];
+    }
+
+    match /menu/{itemId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /offers/{offerId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /menuCategories/{categoryId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Public guestbook: anyone can read and post (name + rating + message),
+    // with only those exact fields; only the admin can edit/remove comments.
+    match /comments/{commentId} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasOnly(['name','message','rating','createdAt'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 40
+        && request.resource.data.message is string
+        && request.resource.data.message.size() > 0
+        && request.resource.data.message.size() <= 500
+        && request.resource.data.rating is int
+        && request.resource.data.rating >= 1
+        && request.resource.data.rating <= 5
+        && request.resource.data.createdAt == request.time;
+      allow update, delete: if isAdmin();
+    }
+  }
+}
