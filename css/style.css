@@ -2198,9 +2198,11 @@ html[dir="rtl"] .menu-search input { text-align: right; }
   .nav-cta .btn-primary { display: none; }
   .hamburger { display: flex; }
   .mobile-actionbar { display: flex; align-items: stretch; gap: 4px; }
-  /* "View Menu" CTA buttons are hidden on mobile — the bottom action bar
-     already gives quick access to the menu, so these are redundant here. */
-  [data-i18n="nav.viewMenu"] { display: none; }
+  /* "View Menu" CTA buttons in the navbar/menu drawer are hidden on mobile —
+     the bottom action bar already gives quick access to the menu there.
+     The hero button (.hero-cta-menu) stays visible since it's the main CTA
+     on the homepage, above the fold, before the sticky bar is scrolled to. */
+  [data-i18n="nav.viewMenu"]:not(.hero-cta-menu) { display: none; }
   /* Note: no mobile-actionbar exists on this standalone menu page,
      so no extra bottom padding is reserved for it here. */
   .hero { padding: 128px 0 76px; }
