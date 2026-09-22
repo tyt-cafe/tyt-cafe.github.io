@@ -907,8 +907,7 @@ html[dir="rtl"] .mobile-menu.open a { transform: translateX(0); }
 html[dir="rtl"] .menu-search input { text-align: right; }
 
 .menu-tabs-wrap {
-  position: sticky;
-  top: 56px; /* tucked 1-3px under the fixed navbar (z-index 100) so no gap shows */
+  position: static;
   z-index: 10;
   background: rgba(14, 9, 22, 0.88);
   backdrop-filter: blur(14px);
@@ -2199,6 +2198,9 @@ html[dir="rtl"] .menu-search input { text-align: right; }
   .nav-cta .btn-primary { display: none; }
   .hamburger { display: flex; }
   .mobile-actionbar { display: flex; align-items: stretch; gap: 4px; }
+  /* "View Menu" CTA buttons are hidden on mobile — the bottom action bar
+     already gives quick access to the menu, so these are redundant here. */
+  [data-i18n="nav.viewMenu"] { display: none; }
   /* Note: no mobile-actionbar exists on this standalone menu page,
      so no extra bottom padding is reserved for it here. */
   .hero { padding: 128px 0 76px; }
@@ -2279,7 +2281,7 @@ body { max-width: 100%; overflow-x: clip; }
   transition: color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
   white-space: nowrap;
 }
-.lang-switch-btn .flag { font-size: 14px; line-height: 1; }
+.lang-switch-btn .flag { display: none; }
 .lang-switch-btn:hover { color: var(--text); }
 .lang-switch-btn.active {
   color: #241205;
@@ -2289,8 +2291,7 @@ body { max-width: 100%; overflow-x: clip; }
 .mobile-menu .lang-switch { margin-top: 6px; }
 
 @media (max-width: 760px) {
-  .lang-switch-btn span:not(.flag) { display: none; }
-  .lang-switch-btn { padding: 7px 9px; }
+  .lang-switch-btn { padding: 7px 12px; }
 }
 
 /* =========================================================================
@@ -2864,6 +2865,7 @@ html[dir="rtl"] .menu-category.in-view .menu-category-head h3 {
 @media (max-width: 760px) {
   /* room for the sticky mobile action bar */
   body { padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
-  /* language switch lives inside the mobile menu on phones */
-  .nav-cta .lang-switch { display: none; }
+  /* language switch now lives in the top navbar on phones too, so hide the
+     duplicate copy inside the mobile hamburger menu */
+  .mobile-menu .lang-switch { display: none; }
 }

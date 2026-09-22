@@ -126,7 +126,7 @@
       "location.phone": "Phone",
       "location.instagram": "Instagram",
       "location.hours": "Opening Hours",
-      "location.hoursValue": "Open 24/7",
+      "location.hoursValue": "Open 9 - 3",
       "location.mapBtn": "الموقع على الخريطة",
       "location.mapEmbedTitle": "TYT Cafe location on Google Maps",
 
@@ -152,10 +152,10 @@
       "offers.emptyText": "مفيش عروض شغالة دلوقتي — تابعنا، هنضيف عروض جديدة قريبًا.",
 
       "hero.eyebrow": "كافيه ولاونج · العاشر من رمضان",
-      "hero.sub": "خُد وقتك",
+      "hero.sub": "Take Your Time",
       "hero.tagline1": "قهوة مميزة",
       "hero.tagline2": "أجواء لا تُنسى",
-      "hero.sip": "خُد وقتك — اشرب، استرخِ، وكرر.",
+      "hero.sip": "Take Your Time — اشرب، استرخِ، وكرر.",
       "hero.directions": "احصل على الاتجاهات",
       "hero.stat1": "قسم بالمنيو",
       "hero.stat2": "مشروب ومقبلات",
@@ -164,7 +164,7 @@
 
       "marquee.1": "قهوة مميزة. أجواء لا تُنسى.",
       "marquee.2": "اشرب، استرخِ، وكرر.",
-      "marquee.3": "خُد وقتك.",
+      "marquee.3": "Take Your Time.",
 
       "exp.eyebrow": "تجربة TYT",
       "exp.title": "مش مجرد كوب قهوة —<br /><em>دي فترة راحة حقيقية.</em>",
@@ -175,14 +175,14 @@
       "exp.card2.desc": "إضاءة دافئة، مقاعد مريحة، هدوء — لاونج مصمم عشان تقعد فيه مش عشان تجري منه.",
       "exp.card3.title": "صحبة حلوة",
       "exp.card3.desc": "ترابيزة لاتنين، ركن لمجموعة الأصحاب، مكان للمذاكرة لوحدك — الكل له مساحته.",
-      "exp.card4.title": "خُد وقتك",
+      "exp.card4.title": "Take Your Time",
       "exp.card4.desc": "من غير نظر للساعة. اقعد لكوب إسبريسو أو لعصر كامل — المكان مكانك.",
 
       "about.eyebrow": "عن TYT",
-      "about.title": "القهوة هي الشماعة.<br /><em>خد وقتك</em> هو الأساس.",
+      "about.title": "القهوة هي الشماعة.<br /><em>Take Your Time</em> هو الأساس.",
       "about.p1": "TYT اتبنى على فكرة بسيطة: كل كوب حلو يستاهل وقفة حلوة. ده كافيه ولاونج المقاعد فيه مريحة عن قصد، والإيقاع فيه هادي عن قصد، والمنيو فيه اللي يناسب أي لحظة — إسبريسو سريع، أو قهوة مختصة بتاخد وقتها، أو ميلك شيك تتقسم مع صحابك.",
-      "about.p2": "سواء بتقعد مع صحابك، أو بتخلص شغل، أو نفسك بس تقعد في مكان دافي مع مشروب حلو، TYT مبني على قاعدة واحدة: خد وقتك.",
-      "about.quote": "\u201cخد بريك. خد وقتك.\u201d",
+      "about.p2": "سواء بتقعد مع صحابك، أو بتخلص شغل، أو نفسك بس تقعد في مكان دافي مع مشروب حلو، TYT مبني على قاعدة واحدة: Take Your Time.",
+      "about.quote": "\u201cخد بريك. Take Your Time.\u201d",
       "about.badge": "اشرب · استرخِ<br />وكرر",
 
       "menu.eyebrow": "المنيو كاملة",
@@ -233,7 +233,7 @@
       "gallery.eyebrow": "معرض الصور",
       "gallery.title": "لمحة سريعة<br /><em>من جوه TYT.</em>",
       "gallery.lede": "نظرة سريعة على المكان، المشروبات، والإيقاع اللي بنحافظ عليه — خد دقيقة واستمتع.",
-      "gallery.imagesAria": "لمحة من جوه كافيه ولاونج TYT – خد وقتك",
+      "gallery.imagesAria": "لمحة من جوه كافيه ولاونج TYT – Take Your Time",
 
       "location.eyebrow": "لاقينا",
       "location.title": "تعالى اقعد معانا<br /><em>في العاشر من رمضان.</em>",
@@ -245,15 +245,15 @@
       "location.phone": "التليفون",
       "location.instagram": "إنستجرام",
       "location.hours": "مواعيد العمل",
-      "location.hoursValue": "مفتوح 24 ساعة طول الأسبوع",
+      "location.hoursValue": "مفتوح من 9 لـ 3",
       "location.mapBtn": "الموقع على الخريطة",
       "location.mapEmbedTitle": "موقع TYT Cafe على خرائط جوجل",
 
       "footer.tagline1": "قهوة مميزة. أجواء لا تُنسى.",
-      "footer.tagline2": "خُد وقتك – اشرب، استرخِ، وكرر.",
+      "footer.tagline2": "Take Your Time – اشرب، استرخِ، وكرر.",
       "footer.quickLinks": "روابط سريعة",
       "footer.visit": "زورنا",
-      "footer.rights": "TYT – خد وقتك. جميع الحقوق محفوظة.",
+      "footer.rights": "TYT – Take Your Time. جميع الحقوق محفوظة.",
       "footer.builtWith": "اتعمل باهتمام عشان صباحاتك الهادية."
     }
   };
@@ -532,7 +532,7 @@
     });
 
     document.title = currentLang === "ar"
-      ? "TYT – خد وقتك | كافيه ولاونج"
+      ? "TYT – Take Your Time | كافيه ولاونج"
       : "TYT – Take Your Time | Coffee & Lounge";
   }
 
