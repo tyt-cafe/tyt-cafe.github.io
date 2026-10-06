@@ -64,6 +64,7 @@ label{display:block;margin-bottom:6px;font-weight:700}input,textarea,select{widt
 <div class="full"><label>اسم الصنف</label><input id="mEditName" required></div>
 <div class="full"><label>الوصف / المكونات</label><textarea id="mEditDesc"></textarea></div>
 <div><label>السعر</label><input id="mNewPrice" inputmode="decimal" required></div>
+<div><label>السعرات الحرارية (kcal)</label><input id="mNewCal" inputmode="numeric" placeholder="مثلاً 120"></div>
 <div><label>القسم</label><select id="mCategorySelect"></select></div>
 <div><label>الشارة (Badge)</label><select id="mBadgeSelect">
 <option value="none">بدون شارة (None)</option>
@@ -97,7 +98,7 @@ label{display:block;margin-bottom:6px;font-weight:700}input,textarea,select{widt
 <form id="menuForm" class="hidden">
 <input id="menuId" type="hidden"><input id="menuSourceKey" type="hidden">
 <div class="grid" style="margin-top:14px">
-<div><label>اسم الصنف</label><input id="mName" required></div><div><label>السعر</label><input id="mPrice" required></div>
+<div><label>اسم الصنف</label><input id="mName" required></div><div><label>السعر</label><input id="mPrice" required></div><div><label>السعرات الحرارية (kcal)</label><input id="mCal" inputmode="numeric" placeholder="مثلاً 120"></div>
 <div><label>القسم</label><select id="mCategory" required></select></div><div><label>الوصف</label><input id="mDesc"></div>
 <div><label>الشارة (Badge)</label><select id="mAddBadge">
 <option value="none">بدون شارة (None)</option>
@@ -319,6 +320,7 @@ async function loadCategories(){
  try{
   const s=await getDocs(collection(db,"menuCategories"));
   s.forEach(d=>{
+   if(MOVED_CATS[d.id])return;
    const x=d.data();
    CATEGORY_DOCS.set(d.id,{id:d.id,...x});
    const current=map.get(d.id);
@@ -414,6 +416,8 @@ $("categoryForm").onsubmit=async e=>{
 
 const menuKeyPart=v=>String(v??"").trim().toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
 const canonicalMenuKey=(categoryId,name)=>`menu:${categoryId}:${menuKeyPart(name)}`;
+const MOVED_CATS=typeof MENU_MOVED_CATEGORIES!=="undefined"?MENU_MOVED_CATEGORIES:{};
+function movedCatId(id){return MOVED_CATS[id]?MOVED_CATS[id].to:id}
 function getBaseMenuIndex(){
  const byKey=new Map(),legacy=new Map(),positional=new Map();
  if(typeof MENU_DATA==="undefined")return {byKey,legacy,positional};
@@ -424,6 +428,13 @@ function getBaseMenuIndex(){
   legacy.set(`${String(c.id).trim().toLowerCase()}||${String(it.name).trim().toLowerCase()}`,key);
   legacy.set(`${String(c.name).trim().toLowerCase()}||${String(it.name).trim().toLowerCase()}`,key);
   positional.set(`menu:${c.id}:${i}`,key);
+ }));
+ /* old keys of items whose category was merged into another one */
+ Object.entries(MOVED_CATS).forEach(([oldId,mv])=>mv.items.forEach((n,i)=>{
+  const key=canonicalMenuKey(mv.to,n);if(!byKey.has(key))return;
+  const low=n.trim().toLowerCase();
+  positional.set(canonicalMenuKey(oldId,n),key);positional.set(`menu:${oldId}:${i}`,key);
+  legacy.set(`${oldId}||${low}`,key);legacy.set(`${mv.name.trim().toLowerCase()}||${low}`,key);
  }));
  return {byKey,legacy,positional};
 }
@@ -460,9 +471,10 @@ async function buildMenuIndex(){
   rows.push({
    docId:hit?.d?.id||null,
    name:(hit?hit.x.name:base.name)||base.name,
-   category:(hit?hit.x.category:base.category)||base.category,
-   categoryId:(hit?hit.x.categoryId:base.categoryId)||base.categoryId,
+   category:(hit&&!MOVED_CATS[hit.x.categoryId]?hit.x.category:base.category)||base.category,
+   categoryId:movedCatId((hit?hit.x.categoryId:base.categoryId)||base.categoryId),
    price:hit?hit.x.price:base.price,
+   calories:(hit&&hit.x.calories!==undefined)?hit.x.calories:(base.calories??""),
    description:(hit?hit.x.description:base.description)||"",
    image:(hit?hit.x.image:base.image)||"",
    badge:(hit?hit.x.badge:base.badge)||"none",
@@ -473,8 +485,8 @@ async function buildMenuIndex(){
   });
  });
  extras.forEach(r=>rows.push({
-  docId:r.d.id,name:r.x.name,category:r.x.category,categoryId:r.x.categoryId||CATEGORY_CACHE.find(c=>c.name===r.x.category)?.id||"",
-  price:r.x.price,description:r.x.description||"",image:r.x.image||"",badge:r.x.badge||"none",
+  docId:r.d.id,name:r.x.name,category:MOVED_CATS[r.x.categoryId]?(CATEGORY_CACHE.find(c=>c.id===movedCatId(r.x.categoryId))?.name||r.x.category):r.x.category,categoryId:movedCatId(r.x.categoryId||CATEGORY_CACHE.find(c=>c.name===r.x.category)?.id||""),
+  price:r.x.price,calories:r.x.calories??"",description:r.x.description||"",image:r.x.image||"",badge:r.x.badge||"none",
   sourceKey:r.x.sourceKey||"",docData:r.x,isBase:false,baseData:null
  }));
  return rows;
@@ -493,7 +505,7 @@ function renderResults(query){
  box.innerHTML="";
  matches.forEach(it=>{
   const el=document.createElement("div");el.className="item result";
-  el.innerHTML=`<div class="itemtop"><div><b>${esc(it.name)}</b><div class="meta">${esc(it.category)} · ${esc(it.price)} EGP</div></div></div>`;
+  el.innerHTML=`<div class="itemtop"><div><b>${esc(it.name)}</b><div class="meta">${esc(it.category)} · ${esc(it.price)} EGP${it.calories!==""&&it.calories!=null?` · ${esc(it.calories)} kcal`:""}</div></div></div>`;
   el.onclick=()=>selectItem(it);
   box.appendChild(el);
  });
@@ -506,6 +518,7 @@ function selectItem(it){
  $("mEditName").value=it.name||"";
  $("mEditDesc").value=it.description||"";
  $("mNewPrice").value=it.price??"";
+ $("mNewCal").value=it.calories??"";
  $("mEditImage").value=it.image||"";
  setImagePreview("mEditImagePreview",it.image||"");
  $("mEditImageStatus").textContent="";$("mEditImageStatus").className="meta";
@@ -524,6 +537,7 @@ function clearSelection(){
  $("mEditName").value="";
  $("mEditDesc").value="";
  $("mNewPrice").value="";
+ $("mNewCal").value="";
  $("mEditImage").value="";
  setImagePreview("mEditImagePreview","");
  $("mEditImageStatus").textContent="";$("mEditImageStatus").className="meta";
@@ -550,20 +564,21 @@ $("mSaveAll").onclick=async()=>{
  if(!name){setMsg("mEditorMsg","اكتب اسم الصنف",true);return}
  if(!price){setMsg("mEditorMsg","اكتب السعر",true);return}
  const description=$("mEditDesc").value.trim();
+ const calories=$("mNewCal").value.replace(/[^\d]/g,"");
  const image=$("mEditImage").value.trim();
  const badge=$("mBadgeSelect").value||"none";
  const selectedCategoryId=$("mCategorySelect").value||it.categoryId||"";
  const selectedCategory=CATEGORY_CACHE.find(c=>c.id===selectedCategoryId);
  const payload={
   name,category:selectedCategory?.name||it.category,categoryId:selectedCategoryId,
-  price,description,image,badge,
+  price,calories,description,image,badge,
   sourceKey:it.sourceKey,deleted:false,
   ...(it.isBase?{originalName:it.baseData.originalName}:{})
  };
  try{
   if(it.docId)await updateDoc(doc(db,"menu",it.docId),payload);
   else{const ref=await addDoc(collection(db,"menu"),payload);it.docId=ref.id}
-  Object.assign(it,{name,category:payload.category,categoryId:selectedCategoryId,price,description,image,badge});
+  Object.assign(it,{name,category:payload.category,categoryId:selectedCategoryId,price,calories,description,image,badge});
   $("mEditorName").textContent=name;
   $("mEditorMeta").textContent=`${payload.category}${it.isBase?" · من المنيو الأصلية":" · مضاف من الإدارة"}`;
   setMsg("mEditorMsg","✓ تم حفظ كل التعديلات بنجاح");
@@ -619,7 +634,7 @@ $("menuForm").onsubmit=async e=>{
     BOTH category (display name) and categoryId — this is what puts a new
     item inside the exact existing category selected, and never creates
     a new one. */
- const data={name:$("mName").value.trim(),price:$("mPrice").value.trim(),category:selectedCategory.name,categoryId:selectedCategory.id,description:$("mDesc").value.trim(),image:$("mImage").value.trim(),badge:$("mAddBadge").value||"none"};
+ const data={name:$("mName").value.trim(),price:$("mPrice").value.trim(),calories:$("mCal").value.replace(/[^\d]/g,""),category:selectedCategory.name,categoryId:selectedCategory.id,description:$("mDesc").value.trim(),image:$("mImage").value.trim(),badge:$("mAddBadge").value||"none"};
  if(!data.name||!data.price){setMsg("mMsg","اكتب اسم الصنف والسعر",true);return}
  try{
   if(id)await updateDoc(doc(db,"menu",id),{...data,sourceKey:stableKey,deleted:false});

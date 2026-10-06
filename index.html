@@ -78,28 +78,36 @@
 
 <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
 <div class="mobile-menu" id="mobileMenu" role="dialog" aria-modal="true" aria-label="Navigation menu">
+  <button type="button" class="mobile-menu-close" id="mobileMenuClose" aria-label="Close menu">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+  </button>
   <div class="mobile-menu-head">
-    <img src="images/logo.png" alt="TYT" class="mobile-menu-logo" />
-    <button type="button" class="mobile-menu-close" id="mobileMenuClose" aria-label="Close menu">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-    </button>
+    <div class="mm-logo-wrap"><img src="images/logo.png" alt="TYT – Take Your Time" class="mobile-menu-logo" /></div>
+    <p class="mm-tagline" dir="ltr">Sip · Chill · Repeat</p>
   </div>
-  <div class="mobile-menu-links">
-    <a href="#home" data-i18n="nav.home">Home</a>
-    <a href="#about" data-i18n="nav.about">About</a>
-    <a href="#menu" data-i18n="nav.menu">Menu</a>
-    <a href="#offers" data-i18n="nav.offers">Offers</a>
-    <a href="#gallery" data-i18n="nav.gallery">Gallery</a>
-    <a href="#comments" data-i18n="nav.comments">Comments</a>
-    <a href="#location" data-i18n="nav.location">Location</a>
-    <a href="#contact" data-i18n="nav.contact">Contact</a>
-  </div>
+  <nav class="mobile-menu-links">
+    <a href="#home"><span class="mm-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg></span><span class="mm-label" data-i18n="nav.home">Home</span><span class="mm-chev" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></a>
+    <a href="#about"><span class="mm-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg></span><span class="mm-label" data-i18n="nav.about">About</span><span class="mm-chev" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></a>
+    <a href="#menu"><span class="mm-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h12v5a6 6 0 0 1-12 0z"/><path d="M17 9h1.5a2.5 2.5 0 0 1 0 5H17"/><path d="M9 3c0 1 1 1.5 1 2.5M13 3c0 1 1 1.5 1 2.5"/></svg></span><span class="mm-label" data-i18n="nav.menu">Menu</span><span class="mm-chev" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></a>
+    <a href="#offers"><span class="mm-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12l-8 8-9-9V3h8z"/><path d="M7.5 7.5h.01"/></svg></span><span class="mm-label" data-i18n="nav.offers">Offers</span><span class="mm-chev" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></a>
+    <a href="#gallery"><span class="mm-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg></span><span class="mm-label" data-i18n="nav.gallery">Gallery</span><span class="mm-chev" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></a>
+    <a href="#comments"><span class="mm-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></span><span class="mm-label" data-i18n="nav.comments">Comments</span><span class="mm-chev" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></a>
+    <a href="#location"><span class="mm-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></span><span class="mm-label" data-i18n="nav.location">Location</span><span class="mm-chev" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></a>
+    <a href="#contact"><span class="mm-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg></span><span class="mm-label" data-i18n="nav.contact">Contact</span><span class="mm-chev" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></a>
+  </nav>
   <div class="mobile-menu-foot">
     <a href="#menu" class="btn btn-primary" data-i18n="nav.viewMenu">View Menu</a>
     <div class="lang-switch" id="langSwitchMobile" role="group" aria-label="Language switch">
       <button type="button" class="lang-switch-btn" data-lang="ar"><span class="flag">🇪🇬</span><span>عربي</span></button>
       <button type="button" class="lang-switch-btn" data-lang="en"><span class="flag">🇬🇧</span><span>EN</span></button>
     </div>
+    <div class="mm-social">
+      <a class="mm-social-btn" href="tel:+201090264649" aria-label="Call"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg></a>
+      <a class="mm-social-btn" href="https://www.instagram.com/tyttakeyourtime.eg/" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17.5 6.5h.01"/></svg></a>
+      <a class="mm-social-btn" href="https://www.facebook.com/profile.php?id=61577272721151&amp;sk=photos" target="_blank" rel="noopener" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h-2.5A3.5 3.5 0 0 0 9 6.5V10H6v4h3v7h4v-7h3l1-4h-4V7a1 1 0 0 1 1-1h2z"/></svg></a>
+      <a class="mm-social-btn" href="https://www.google.com/maps/place/TYT+Cafe/@30.302526,31.7721123,21z/data=!4m6!3m5!1s0x1457fd00092deb7d:0xf6a0c0c44c686c2c!8m2!3d30.3024375!4d31.7720625!16s%2Fg%2F11ntn8t9y4" target="_blank" rel="noopener" aria-label="Directions"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></a>
+    </div>
+    <p class="mm-hours"><span class="mm-dot" aria-hidden="true"></span><span data-i18n="location.hoursValue">Open 9 - 3</span></p>
   </div>
 </div>
 
@@ -263,9 +271,10 @@
     <div class="item-modal-foot">
       <div class="item-modal-price-row">
         <span class="item-modal-price" id="itemModalPrice"></span>
+        <span class="item-modal-cal" id="itemModalCal" hidden></span>
         <button type="button" class="menu-item-fav item-modal-fav" id="itemModalFav" aria-pressed="false" hidden></button>
       </div>
-      <span class="item-modal-note" id="itemModalNote" data-i18n="modal.note">Prices &amp; availability as listed on our printed menu.</span>
+      <span class="item-modal-note" id="itemModalNote" data-i18n="modal.note">Prices &amp; availability as listed on our printed menu. Calories are approximate.</span>
     </div>
   </div>
 </div>

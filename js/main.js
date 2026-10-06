@@ -273,7 +273,9 @@
       const categoryMap = new Map(baseCategories.map(cat => [cat.id, { ...cat }]));
       const categoryOrder = baseCategories.map(cat => cat.id);
 
+      const MOVED = (typeof MENU_MOVED_CATEGORIES !== "undefined") ? MENU_MOVED_CATEGORIES : {};
       categorySnap.forEach(d => {
+        if (MOVED[d.id]) return; /* merged into another category */
         const x = d.data();
         const current = categoryMap.get(d.id);
         if (x.deleted === true) {
@@ -338,16 +340,36 @@
         });
       });
 
+      /* Old keys/names of items whose category was merged into another. */
+      Object.entries(MOVED).forEach(([oldId, mv]) => {
+        mv.items.forEach((itemName, i) => {
+          const newKey = canonicalKey(mv.to, itemName);
+          if (!byKey.has(newKey)) return;
+          const low = itemName.trim().toLowerCase();
+          legacyKeyLookup.set(`menu:${oldId}:${menuKeyPart(itemName)}`, newKey);
+          legacyKeyLookup.set(`menu:${oldId}:${i}`, newKey);
+          legacyLookup.set(`${oldId}||${low}`, newKey);
+          legacyLookup.set(`${mv.name.trim().toLowerCase()}||${low}`, newKey);
+        });
+      });
+
       const extras = [];
 
       menuSnap.forEach(d => {
-        const x = d.data();
+        const x = { ...d.data() };
+        /* Items saved under a merged category now live in its new one. */
+        if (MOVED[x.categoryId]) {
+          const target = categoryMap.get(MOVED[x.categoryId].to);
+          x.__oldCategoryId = x.categoryId;
+          x.categoryId = MOVED[x.categoryId].to;
+          if (target) x.category = target.name;
+        }
 
         if (x.deleted === true) {
           const deletedKey =
             legacyKeyLookup.get(String(x.sourceKey || "")) ||
             legacyLookup.get(`${String(x.category || "").trim().toLowerCase()}||${String(x.originalName || x.name || "").trim().toLowerCase()}`) ||
-            legacyLookup.get(`${String(x.categoryId || "").trim().toLowerCase()}||${String(x.originalName || x.name || "").trim().toLowerCase()}`);
+            legacyLookup.get(`${String(x.__oldCategoryId || x.categoryId || "").trim().toLowerCase()}||${String(x.originalName || x.name || "").trim().toLowerCase()}`);
           if (deletedKey && byKey.has(deletedKey)) byKey.delete(deletedKey);
           return;
         }
@@ -357,17 +379,18 @@
 
         if (!key && originalName) {
           key =
-            legacyLookup.get(`${String(x.categoryId || "").trim().toLowerCase()}||${originalName.toLowerCase()}`) ||
+            legacyLookup.get(`${String(x.__oldCategoryId || x.categoryId || "").trim().toLowerCase()}||${originalName.toLowerCase()}`) ||
             legacyLookup.get(`${String(x.category || "").trim().toLowerCase()}||${originalName.toLowerCase()}`) || "";
         }
 
         if (!key) {
           key =
-            legacyLookup.get(`${String(x.categoryId || "").trim().toLowerCase()}||${String(x.name || "").trim().toLowerCase()}`) ||
+            legacyLookup.get(`${String(x.__oldCategoryId || x.categoryId || "").trim().toLowerCase()}||${String(x.name || "").trim().toLowerCase()}`) ||
             legacyLookup.get(`${String(x.category || "").trim().toLowerCase()}||${String(x.name || "").trim().toLowerCase()}`) || "";
         }
 
         if (key && byKey.has(key)) {
+          delete x.__oldCategoryId;
           byKey.set(key, {
             ...byKey.get(key),
             ...x,
@@ -379,6 +402,7 @@
             __baseCategoryName: byKey.get(key).__baseCategoryName
           });
         } else {
+          delete x.__oldCategoryId;
           extras.push({ ...x, __sourceKey: `remote:${d.id}` });
         }
       });
@@ -709,6 +733,13 @@
     return str + " " + tt("menu.currency", "EGP");
   }
 
+  /* Calories label ("120" → "120 kcal" / "120 سعرة"). Empty when unknown. */
+  function calText(cal) {
+    const n = parseInt(String(cal ?? "").replace(/[^\d]/g, ""), 10);
+    if (!Number.isFinite(n)) return "";
+    return n + " " + tt("menu.kcal", "kcal");
+  }
+
   /* First pictures load immediately (top priority for the first few); the
      rest stay lazy and are pre-fetched in the background (prefetchMenuImages). */
   let _menuImgIndex = 0;
@@ -808,6 +839,7 @@
               data-item-name="${esc(itemL10n.name)}"
               data-item-desc="${esc(noDesc ? "" : (itemL10n.description || ""))}"
               data-item-price="${esc(priceText(item.price))}"
+              data-item-cal="${esc(calText(item.calories))}"
               data-item-category="${esc(catL10n.name)}"
               data-item-icon="${esc(cat.icon)}"
               data-item-image="${esc(item.image || "")}">
@@ -820,12 +852,14 @@
                   <span class="mir-name">${itemL10n.name}</span>
                   ${descText ? `<span class="mir-desc">${descText}</span>` : ""}
                   <span class="mir-price">${priceText(item.price)}</span>
+                  ${calText(item.calories) ? `<span class="mir-cal">${calText(item.calories)}</span>` : ""}
                 </span>
               </span>
               <span class="menu-item-body">
                 <span class="menu-item-name">${itemL10n.name}</span>
                 <span class="menu-item-foot">
                   <span class="menu-item-price">${priceText(item.price)}</span>
+                  ${calText(item.calories) ? `<span class="menu-item-cal">${calText(item.calories)}</span>` : ""}
                 </span>
               </span>
             </button>`;
@@ -878,6 +912,11 @@
     itemModalName.textContent = d.itemName || "";
     itemModalDesc.textContent = d.itemDesc || tt("modal.defaultDesc", "A TYT favorite, made fresh to order.");
     itemModalPrice.textContent = d.itemPrice || "";
+    const itemModalCal = document.getElementById("itemModalCal");
+    if (itemModalCal) {
+      itemModalCal.textContent = d.itemCal || "";
+      itemModalCal.hidden = !d.itemCal;
+    }
     modalFavSource = btn.querySelector(".menu-item-fav");
     syncModalFav();
     lastFocusedEl = btn;

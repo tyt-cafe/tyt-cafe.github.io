@@ -81,11 +81,12 @@
       "menu.favRemove": "Remove from favorites",
       "menu.favEmpty": "You haven't added any favorites yet — tap the heart on any item to save it here.",
       "menu.currency": "EGP",
+      "menu.kcal": "kcal",
       "menu.prevPage": "Previous",
       "menu.nextPage": "Next",
       "menu.inOffer": "🎁 In an Offer",
 
-      "modal.note": "Prices & availability as listed on our printed menu.",
+      "modal.note": "Prices & availability as listed on our printed menu. Calories are approximate.",
       "modal.defaultDesc": "A TYT favorite, made fresh to order.",
 
       "offers.eyebrow": "Offers",
@@ -201,10 +202,11 @@
       "menu.favRemove": "إزالة من المفضلة",
       "menu.favEmpty": "لسه مفيش حاجة في المفضلة — دوس على القلب على أي صنف عشان تحفظه هنا.",
       "menu.currency": "جنيه",
+      "menu.kcal": "سعرة",
       "menu.prevPage": "السابق",
       "menu.nextPage": "التالي",
 
-      "modal.note": "الأسعار والتوافر زي ما هي مدرجة في المنيو المطبوع عندنا.",
+      "modal.note": "الأسعار والتوافر زي ما هي مدرجة في المنيو المطبوع عندنا. السعرات الحرارية تقريبية.",
       "modal.defaultDesc": "من أشهر أصناف TYT، بتتحضر طازة لحد ما تطلبها.",
 
       "offers.eyebrow": "العروض",
@@ -453,10 +455,10 @@
       "sandwiches::roumy cheese sandwich": { name: "سندوتش جبنة رومي" },
       "sandwiches::halawa sandwich": { name: "سندوتش حلاوة قشطة" },
 
-      "waffle-pancake::waffle": { name: "وافل" },
-      "waffle-pancake::pancake (6 pieces)": { name: "بان كيك 6 قطع" },
-      "waffle-pancake::pancake (12 pieces)": { name: "بان كيك 12 قطعة" },
-      "waffle-pancake::pancake (24 pieces)": { name: "بان كيك 24 قطعة" },
+      "desserts::waffle": { name: "وافل" },
+      "desserts::pancake (6 pieces)": { name: "بان كيك 6 قطع" },
+      "desserts::pancake (12 pieces)": { name: "بان كيك 12 قطعة" },
+      "desserts::pancake (24 pieces)": { name: "بان كيك 24 قطعة" },
 
       "food::shish tawook sandwich": { name: "سندوتش شيش طاووق" },
       "food::instant noodles (small)": { name: "اندومي جاهز صغير" },
@@ -479,7 +481,7 @@
       "desserts::chocolate fudge": { name: "شوكليت فادج" },
       "desserts::red velvet": { name: "ريد فيلفت" },
 
-      "mochi::mochi (1 piece)": { name: "موتشي قطعة" },
+      "desserts::mochi (1 piece)": { name: "موتشي قطعة" },
 
       "suhoor::fuul (fava beans)": { name: "فول" },
       "suhoor::taameya (falafel)": { name: "طعمية" },

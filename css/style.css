@@ -2871,3 +2871,244 @@ html[dir="rtl"] .menu-category.in-view .menu-category-head h3 {
      duplicate copy inside the mobile hamburger menu */
   .mobile-menu .lang-switch { display: none; }
 }
+
+
+/* ---------------- Calories (kcal) next to each drink ---------------- */
+.menu-item-foot { flex-wrap: wrap; row-gap: 6px; }
+.menu-item-cal,
+.item-modal-cal,
+.mir-cal {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.menu-item-cal::before,
+.item-modal-cal::before,
+.mir-cal::before {
+  content: "";
+  width: 0.95em; height: 0.95em;
+  flex-shrink: 0;
+  background: currentColor;
+  opacity: 0.85;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2c1 3.5-1.5 5.5-3 7.5S6 13.5 6 15a6 6 0 0 0 12 0c0-2.5-1.5-4.5-2.5-5.5.2 1.6-.4 3-1.5 3.5.5-3-.5-7.5-2-11z'/%3E%3C/svg%3E") center / contain no-repeat;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2c1 3.5-1.5 5.5-3 7.5S6 13.5 6 15a6 6 0 0 0 12 0c0-2.5-1.5-4.5-2.5-5.5.2 1.6-.4 3-1.5 3.5.5-3-.5-7.5-2-11z'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.menu-item-cal { font-size: 11.5px; }
+.item-modal-cal { font-size: 14px; }
+.item-modal-cal[hidden] { display: none; }
+.mir-cal { margin-top: 2px; font-size: 12px; opacity: 0; transform: translateY(8px); transition: opacity 0.14s ease, transform 0.2s var(--ease); }
+.menu-item.is-open .mir-cal { opacity: 1; transform: none; transition-delay: 0.08s; }
+html[dir="rtl"] .menu-item-cal, html[dir="rtl"] .item-modal-cal, html[dir="rtl"] .mir-cal { font-family: var(--font-arabic); }
+
+
+/* =========================================================================
+   MOBILE HEADER POLISH — clearer logo + refined menu (hamburger) button
+   ========================================================================= */
+/* Logo: bigger mascot, framed in a clean gold-ringed circle */
+.navbar .brand-mark,
+.navbar.scrolled .brand-mark {
+  width: 40px; height: 40px;
+  padding: 0;
+  border: 1.5px solid var(--secondary);
+  border-radius: 50%;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 35%, #3a2558, #1c1228 75%);
+  box-shadow: 0 0 0 3px rgba(217,164,65,0.12);
+}
+.navbar .brand-mark img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  object-position: 50% 0%;
+  transform: translateY(7%);
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+}
+.navbar .brand, .navbar.scrolled .brand { padding: 3px; padding-inline-end: 15px; gap: 10px; }
+.navbar .brand-word, .navbar.scrolled .brand-word { font-size: 15px; }
+@media (max-width: 619px) {
+  .navbar .brand-mark, .navbar.scrolled .brand-mark { width: 38px; height: 38px; }
+  .navbar .brand, .navbar.scrolled .brand { padding-inline-end: 14px; }
+}
+
+/* Menu button: same dark-glass + gold-outline style as the logo pill */
+.hamburger {
+  position: relative;
+  width: 46px; height: 46px;
+  border-radius: 50%;
+  background: rgba(23, 16, 31, 0.62);
+  border: 1px solid var(--gold-border);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06);
+  align-items: flex-end;
+  justify-content: center;
+  gap: 5px;
+  padding: 0 13px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 0.3s ease, background 0.3s ease, transform 0.2s var(--ease);
+}
+.hamburger:hover { border-color: var(--secondary-light); background: rgba(35, 22, 52, 0.78); }
+.hamburger:active { transform: scale(0.94); }
+.hamburger:focus-visible { outline: 2px solid var(--secondary); outline-offset: 3px; }
+.hamburger span {
+  display: block;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--secondary-light), var(--secondary));
+  transition: width 0.3s var(--ease), transform 0.3s var(--ease), opacity 0.2s ease;
+}
+.hamburger span:nth-child(1) { width: 20px; }
+.hamburger span:nth-child(2) { width: 13px; }
+.hamburger span:nth-child(3) { width: 17px; }
+.hamburger:hover span { width: 20px; }
+.hamburger.open span { width: 20px; }
+.hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.hamburger.open span:nth-child(2) { opacity: 0; transform: scaleX(0.3); }
+.hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+
+/* =========================================================================
+   MOBILE DRAWER (opened by the ☰ button) — redesigned
+   ========================================================================= */
+.mobile-menu {
+  width: min(86vw, 350px);
+  padding: 18px 18px calc(20px + env(safe-area-inset-bottom, 0px));
+  background:
+    radial-gradient(90% 38% at 50% 0%, rgba(155,93,229,0.30), transparent 70%),
+    radial-gradient(70% 30% at 50% 100%, rgba(217,164,65,0.10), transparent 70%),
+    var(--bg-alt);
+  border-left: 1px solid var(--gold-border);
+}
+html[dir="rtl"] .mobile-menu { border-left: 0; border-right: 1px solid var(--gold-border); }
+
+/* close button floats in the corner */
+.mobile-menu > .mobile-menu-close {
+  position: absolute;
+  top: 14px; inset-inline-end: 14px;
+  width: 38px; height: 38px;
+  background: rgba(23,16,31,0.7);
+  border: 1px solid var(--gold-border);
+  color: var(--secondary-light);
+  z-index: 2;
+}
+
+/* big centred logo with a soft glow */
+.mobile-menu .mobile-menu-head {
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  margin: 14px 0 18px;
+  padding: 0 0 18px;
+  border-bottom: 1px solid var(--gold-border);
+  text-align: center;
+}
+.mm-logo-wrap {
+  position: relative;
+  display: flex; justify-content: center;
+}
+.mm-logo-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 10% 18%;
+  background: radial-gradient(closest-side, rgba(217,164,65,0.35), rgba(155,93,229,0.18) 60%, transparent);
+  filter: blur(14px);
+  z-index: 0;
+}
+.mobile-menu .mobile-menu-logo {
+  position: relative; z-index: 1;
+  height: auto;
+  width: 78%;
+  max-width: 230px;
+  filter: drop-shadow(0 8px 18px rgba(0,0,0,0.5));
+  opacity: 0; transform: scale(0.92);
+  transition: opacity 0.4s var(--ease) 0.05s, transform 0.5s var(--ease) 0.05s;
+}
+.mobile-menu.open .mobile-menu-logo { opacity: 1; transform: none; }
+.mm-tagline {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--secondary-light);
+  opacity: 0.85;
+}
+
+/* link rows: icon · label · chevron */
+.mobile-menu .mobile-menu-links { gap: 6px; }
+.mobile-menu .mobile-menu-links a {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 12px 9px 9px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  font-size: 17px;
+}
+html[dir="rtl"] .mobile-menu .mobile-menu-links a { padding: 9px 9px 9px 12px; font-family: var(--font-arabic); }
+.mm-ico {
+  width: 38px; height: 38px;
+  flex-shrink: 0;
+  display: grid; place-items: center;
+  border-radius: 11px;
+  background: rgba(217,164,65,0.08);
+  border: 1px solid var(--gold-border);
+  color: var(--secondary-light);
+  transition: background 0.25s ease, color 0.25s ease;
+}
+.mm-ico svg { width: 19px; height: 19px; }
+.mm-label { flex: 1; min-width: 0; }
+.mm-chev { display: grid; place-items: center; color: var(--muted-2); opacity: 0.7; transition: transform 0.25s var(--ease), color 0.25s ease; }
+.mm-chev svg { width: 16px; height: 16px; }
+html[dir="rtl"] .mm-chev { transform: scaleX(-1); }
+.mobile-menu .mobile-menu-links a:hover,
+.mobile-menu .mobile-menu-links a:active {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.06);
+  color: var(--text);
+}
+.mobile-menu .mobile-menu-links a.active {
+  color: var(--secondary-light);
+  background: linear-gradient(90deg, rgba(217,164,65,0.16), rgba(217,164,65,0.03));
+  border-color: var(--gold-border);
+}
+html[dir="rtl"] .mobile-menu .mobile-menu-links a.active { background: linear-gradient(270deg, rgba(217,164,65,0.16), rgba(217,164,65,0.03)); }
+.mobile-menu .mobile-menu-links a.active .mm-ico {
+  background: linear-gradient(135deg, var(--secondary-light), var(--secondary));
+  color: #1a1024;
+  border-color: transparent;
+}
+.mobile-menu .mobile-menu-links a.active .mm-chev { color: var(--secondary-light); opacity: 1; }
+.mobile-menu.open .mobile-menu-links a:nth-child(8) { transition-delay: 0.34s; }
+
+/* footer: quick contact buttons + opening hours */
+.mobile-menu .mobile-menu-foot {
+  border-top: 1px solid var(--gold-border);
+  padding-top: 18px;
+  gap: 12px;
+  align-items: center;
+}
+.mm-social { display: flex; justify-content: center; gap: 12px; }
+.mobile-menu .mm-social-btn {
+  width: 46px; height: 46px;
+  padding: 0;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: rgba(23,16,31,0.7);
+  border: 1px solid var(--gold-border);
+  color: var(--secondary-light);
+}
+.mobile-menu .mm-social-btn:hover { background: rgba(217,164,65,0.14); color: var(--secondary-light); }
+.mm-social-btn svg { width: 20px; height: 20px; }
+.mobile-menu.open .mm-social-btn { transition-delay: 0.36s; }
+.mm-hours {
+  margin: 0;
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.mm-dot { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 0 3px rgba(74,222,128,0.18); }
