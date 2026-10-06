@@ -1,0 +1,4 @@
+# The function verifies Firebase tokens itself, so Supabase's own JWT gate
+# (which only understands Supabase tokens) must be off for this function.
+[functions.upload-image]
+verify_jwt = false
