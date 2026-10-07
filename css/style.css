@@ -57,15 +57,16 @@
   position: fixed;
   top: 0; left: 0;
   height: 2.5px;
-  width: 0%;
+  width: 100%;
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  will-change: transform;
   background: linear-gradient(90deg, var(--secondary), var(--primary));
   z-index: 300;
-  transition: width 0.12s linear;
+  transition: transform 0.12s linear;
   pointer-events: none;
 }
-@media (prefers-reduced-motion: reduce) {
-  .scroll-progress { transition: none; }
-}
+
 
 /* =========================================================================
    RESET
@@ -74,7 +75,7 @@
 html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+  *, *::before, *::after { scroll-behavior: auto !important; }
 }
 body, h1, h2, h3, h4, p, figure, blockquote { margin: 0; }
 ul { list-style: none; margin: 0; padding: 0; }
@@ -403,9 +404,7 @@ section { position: relative; }
 }
 .mobile-menu-foot .btn { width: 100%; text-align: center; }
 
-@media (prefers-reduced-motion: reduce) {
-  .mobile-menu, .mobile-menu a, .mobile-menu-overlay, .mobile-menu-close { transition: none; }
-}
+
 
 html[dir="rtl"] .mobile-menu {
   right: auto; left: 0;
@@ -533,9 +532,7 @@ html[dir="rtl"] .mobile-menu.open a { transform: translateX(0); }
   78%  { opacity: 1; transform: translateX(-9%); }
   100% { opacity: 0; transform: translateX(0); }
 }
-@media (prefers-reduced-motion: reduce) {
-  .hero-logo-drinking { display: none; }
-}
+
 .hero-eyebrow {
   display: inline-flex;
   align-items: center;
@@ -1292,9 +1289,7 @@ html[dir="rtl"] .menu-search input { text-align: right; }
   70% { background: rgba(217,164,65,0.14); }
   100% { background: transparent; }
 }
-@media (prefers-reduced-motion: reduce) {
-  .menu-item-highlight { animation: none; }
-}
+
 
 /* stagger the reveal of menu items within a visible category */
 .menu-category.in-view .menu-item { animation: menu-item-in 0.3s var(--ease) both; }
@@ -1307,9 +1302,7 @@ html[dir="rtl"] .menu-search input { text-align: right; }
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
-@media (prefers-reduced-motion: reduce) {
-  .menu-category.in-view .menu-item { animation: none; }
-}
+
 
 /* animated category-tab switch: old items fade+shrink out, new items fade+rise in */
 .menu-item-filter-out {
@@ -1322,9 +1315,7 @@ html[dir="rtl"] .menu-search input { text-align: right; }
   from { opacity: 0; transform: translateY(14px) scale(0.96); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
-@media (prefers-reduced-motion: reduce) {
-  .menu-item-filter-out, .menu-item-filter-in { animation: none !important; transition: none !important; opacity: 1 !important; transform: none !important; }
-}
+
 
 /* =========================================================================
    MENU STRIP — every picture in ONE horizontal line, one after another.
@@ -1476,7 +1467,9 @@ html[dir="rtl"] .menu-search input { text-align: right; }
   .menu-row-arrow { width: 32px; height: 32px; }
   .menu-row-arrow svg { width: 15px; height: 15px; }
 }
-@media (prefers-reduced-motion: reduce) { .menu-pager .is-rows .menu-list { scroll-behavior: auto; } }
+@media (prefers-reduced-motion: reduce) {
+  .menu-pager .is-rows .menu-list { scroll-behavior: auto; }
+}
 
 /* ---- side arrows ---- */
 .menu-pager-arrow {
@@ -1520,7 +1513,6 @@ html[dir="rtl"] .menu-search input { text-align: right; }
 @keyframes pager-nudge-left  { 0%, 55%, 100% { transform: translateX(0); } 75% { transform: translateX(-4px); } }
 @keyframes pager-nudge-right { 0%, 55%, 100% { transform: translateX(0); } 75% { transform: translateX(4px); } }
 @media (prefers-reduced-motion: reduce) {
-  .menu-pager-arrow svg { animation: none !important; }
   #menuContainer { scroll-behavior: auto; }
 }
 
@@ -1765,7 +1757,6 @@ html[dir="rtl"] .menu-search input { text-align: right; }
   object-fit: cover;
   object-position: center top;
   transform-origin: 30% 35%;
-  animation: galleryKenBurns 11s ease-in-out infinite alternate;
 }
 
 .gallery-slideshow::before {
@@ -1800,10 +1791,7 @@ html[dir="rtl"] .menu-search input { text-align: right; }
   100%     { background-position: 130% 30%; opacity: 0; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .gallery-slide { animation: none; }
-  .gallery-slideshow::after { animation: none; opacity: 0; }
-}
+
 
 @media (max-width: 760px) {
   .gallery-section { padding: 80px 0 90px; }
@@ -2177,9 +2165,7 @@ html[dir="rtl"] .menu-search input { text-align: right; }
 }
 .actionbar-item--accent:hover,
 .actionbar-item--accent:focus-visible { color: #241205; background: linear-gradient(135deg, var(--secondary-light), var(--secondary)); opacity: 0.92; }
-@media (prefers-reduced-motion: reduce) {
-  .actionbar-item { transition: none; }
-}
+
 
 /* =========================================================================
    RESPONSIVE
@@ -2529,9 +2515,7 @@ html[dir="rtl"] .comment-card-head .star-rating { margin-inline-start: 0; margin
   transition: transform 0.18s ease-out, opacity 0.18s ease-out;
   will-change: transform, opacity;
 }
-@media (prefers-reduced-motion: reduce) {
-  .menu-pager .menu-item-media { transform: none; opacity: 1; transition: none; }
-}
+
 
 
 /* =========================================================================
@@ -2633,9 +2617,7 @@ html[dir="rtl"] .comment-card-head .star-rating { margin-inline-start: 0; margin
 html[dir="rtl"] .mir-cat { letter-spacing: 0; }
 html[dir="rtl"] .mir-name, html[dir="rtl"] .mir-price { font-family: var(--font-arabic); }
 
-@media (prefers-reduced-motion: reduce) {
-  .menu-item-reveal, .menu-item-reveal * { transition: none !important; transform: none !important; }
-}
+
 
 
 /* ---- Category name animation ---- */
@@ -2668,12 +2650,7 @@ html[dir="rtl"] .mir-name, html[dir="rtl"] .mir-price { font-family: var(--font-
 .menu-category.in-view .menu-category-num { animation: cat-num-in 0.3s var(--ease) 0.03s both; }
 .menu-category.in-view .menu-category-head .count,
 .menu-category.in-view .menu-row-arrows { animation: cat-count-in 0.3s var(--ease) 0.08s both; }
-@media (prefers-reduced-motion: reduce) {
-  .menu-category.in-view .menu-category-head h3,
-  .menu-category.in-view .menu-category-num,
-  .menu-category.in-view .menu-category-head .count,
-  .menu-category.in-view .menu-row-arrows { animation: none !important; }
-}
+
 
 
 /* Pictures can't be dragged out / saved by press-and-hold; taps go to the card. */
@@ -2847,11 +2824,7 @@ html[dir="rtl"] .menu-category.in-view .menu-category-head h3 {
 .menu-category.in-view .menu-category-icon { animation: cat-icon-pop 0.75s cubic-bezier(0.34,1.56,0.64,1) 0.1s both; }
 .menu-category.in-view .menu-category-num { animation: cat-num-in 0.6s var(--ease) 0.05s both; }
 
-@media (prefers-reduced-motion: reduce) {
-  .menu-category.in-view .menu-category-head h3,
-  .menu-category.in-view .menu-category-icon,
-  .menu-category.in-view .menu-row-wrap::before { animation: none !important; }
-}
+
 @media (max-width: 619px) {
   .menu-category-icon { width: 34px; height: 34px; }
   .menu-category-icon svg { width: 17px; height: 17px; }
@@ -3112,3 +3085,83 @@ html[dir="rtl"] .mobile-menu .mobile-menu-links a.active { background: linear-gr
   color: var(--muted);
 }
 .mm-dot { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 0 3px rgba(74,222,128,0.18); }
+
+
+/* =========================================================================
+   MOTION POLICY
+   Animations play for everyone, on every device. Visitors whose system asks
+   for reduced motion (Windows "Animation effects" off, macOS/iOS "Reduce
+   motion") get the same animations with gentler travel distance, and instant
+   instead of smooth scrolling (see the scroll-behavior rules above).
+   ========================================================================= */
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] { transform: translateY(18px); }
+  [data-reveal].in-view { transform: none; }
+}
+
+/* looping animations rest while their section is off-screen (see main JS) */
+.motion-paused, .motion-paused *, .motion-paused *::before, .motion-paused *::after,
+.motion-paused::before, .motion-paused::after { animation-play-state: paused !important; }
+
+/* =========================================================================
+   NAVBAR HOME BUTTON — full TYT lockup in a glass pill
+   ========================================================================= */
+.navbar .brand,
+.navbar.scrolled .brand {
+  position: relative;
+  padding: 5px 16px 5px 12px;
+  gap: 0;
+  border-radius: 999px;
+  background:
+    radial-gradient(120% 140% at 20% 0%, rgba(155,93,229,0.28), transparent 60%),
+    rgba(18, 12, 26, 0.72);
+  border: 1px solid var(--gold-border);
+  box-shadow: 0 8px 22px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.08), 0 0 0 4px rgba(217,164,65,0.05);
+  overflow: hidden;
+}
+.navbar .brand::after {               /* soft light sweep on hover */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.14) 50%, transparent 70%);
+  transform: translateX(-120%);
+  transition: transform 0.7s var(--ease);
+  pointer-events: none;
+}
+.navbar .brand:hover::after { transform: translateX(120%); }
+.navbar .brand:hover {
+  border-color: var(--secondary-light);
+  box-shadow: 0 10px 26px rgba(217,164,65,0.22), inset 0 1px 0 rgba(255,255,255,0.1), 0 0 0 4px rgba(217,164,65,0.10);
+}
+.navbar .brand-lockup {
+  display: block;
+  height: 50px;
+  width: auto;
+  filter: drop-shadow(0 3px 6px rgba(0,0,0,0.45));
+  transition: height 0.35s var(--ease), transform 0.35s var(--ease);
+}
+.navbar .brand:hover .brand-lockup { transform: scale(1.04); }
+.navbar.scrolled .brand-lockup { height: 40px; }
+html[dir="rtl"] .navbar .brand, html[dir="rtl"] .navbar.scrolled .brand { padding: 5px 12px 5px 16px; }
+@media (max-width: 619px) {
+  .navbar .brand-lockup { height: 38px; }
+  .navbar.scrolled .brand-lockup { height: 34px; }
+  .navbar .brand, .navbar.scrolled .brand { padding: 4px 12px 4px 10px; }
+  html[dir="rtl"] .navbar .brand, html[dir="rtl"] .navbar.scrolled .brand { padding: 4px 10px 4px 12px; }
+}
+
+/* ---- menu photos: soft shimmer while loading, then fade in (never an empty tile) ---- */
+.menu-item-icon img:not(.is-loaded) { opacity: 0; }
+.menu-item-icon img.is-loaded { animation: menu-img-in 0.35s ease both; }
+@keyframes menu-img-in { from { opacity: 0; } to { opacity: 1; } }
+.menu-item-media:has(img:not(.is-loaded))::before {
+  content: "";
+  position: absolute;
+  inset: 12% 22% 6%;
+  border-radius: 28px 28px 22px 22px;
+  background: linear-gradient(100deg, rgba(255,255,255,0.03) 30%, rgba(217,164,65,0.10) 50%, rgba(255,255,255,0.03) 70%);
+  background-size: 220% 100%;
+  animation: menu-img-shimmer 1.2s linear infinite;
+  pointer-events: none;
+}
+@keyframes menu-img-shimmer { from { background-position: 120% 0; } to { background-position: -120% 0; } }

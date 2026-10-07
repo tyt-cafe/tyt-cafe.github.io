@@ -2,8 +2,13 @@
 (function () {
   "use strict";
 
-  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const canHover = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  /* Reduced motion is only used to make SCROLLING instant (never to switch
+     animations off). Read live, so changing the OS setting applies at once. */
+  const reducedMotionMQ = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const prefersInstantScroll = () => reducedMotionMQ.matches;
+  /* Mouse/trackpad present (also true on touchscreen laptops, which report
+     a coarse PRIMARY pointer but still have a mouse). */
+  const canHover = window.matchMedia("(any-hover: hover) and (any-pointer: fine)").matches;
 
   /* ---------------------------------------------------------------------
      NAVBAR: shrink + blur on scroll, active link highlight, scroll progress
@@ -15,20 +20,36 @@
   const actionbarLinks = document.querySelectorAll(".mobile-actionbar a[href^='#']");
   const scrollProgress = document.getElementById("scrollProgress");
 
+  /* Section positions are measured once (and again on resize / content
+     changes) instead of on every scroll event, which forced a full layout
+     per scroll tick and made scrolling stutter on desktop. */
+  let sectionTops = null;
+  let lastActiveSection = null;
+  function measureSectionTops() {
+    sectionTops = Array.from(sections).map((s) => ({ id: s.id, top: s.offsetTop - 140 }));
+  }
+  window.addEventListener("resize", () => { sectionTops = null; }, { passive: true });
+  window.addEventListener("load", () => { sectionTops = null; scheduleNavScroll(); });
+  if (typeof ResizeObserver !== "undefined") {
+    new ResizeObserver(() => { sectionTops = null; }).observe(document.body);
+  }
+
   function onScroll() {
     navbar.classList.toggle("scrolled", window.scrollY > 40);
 
     if (scrollProgress) {
       const docHeight = document.documentElement.scrollHeight - window.innerHeight;
       const pct = docHeight > 0 ? (window.scrollY / docHeight) * 100 : 0;
-      scrollProgress.style.width = Math.min(100, Math.max(0, pct)) + "%";
+      scrollProgress.style.transform = "scaleX(" + (Math.min(100, Math.max(0, pct)) / 100).toFixed(4) + ")";
     }
 
     let current = "";
-    sections.forEach((section) => {
-      const top = section.offsetTop - 140;
-      if (window.scrollY >= top) current = section.id;
-    });
+    if (!sectionTops) measureSectionTops();
+    for (let i = 0; i < sectionTops.length; i++) {
+      if (window.scrollY >= sectionTops[i].top) current = sectionTops[i].id;
+    }
+    if (current === lastActiveSection) return;
+    lastActiveSection = current;
     navLinks.forEach((link) => {
       link.classList.toggle("active", link.getAttribute("href") === `#${current}`);
     });
@@ -39,8 +60,27 @@
       link.classList.toggle("actionbar-item--current", link.getAttribute("href") === `#${current}`);
     });
   }
-  window.addEventListener("scroll", onScroll, { passive: true });
+  let navTicking = false;
+  function scheduleNavScroll() {
+    if (navTicking) return;
+    navTicking = true;
+    window.requestAnimationFrame(() => { navTicking = false; onScroll(); });
+  }
+  window.addEventListener("scroll", scheduleNavScroll, { passive: true });
   onScroll();
+
+  /* ---------------------------------------------------------------------
+     OFF-SCREEN PAUSE: looping decorative animations (floating beans, rings,
+     spinning badge, shine…) pause while their section is off-screen and
+     resume when it scrolls back, so the PC isn't animating what nobody sees.
+  --------------------------------------------------------------------- */
+  if ("IntersectionObserver" in window) {
+    const pauseObserver = new IntersectionObserver((entries) => {
+      entries.forEach((en) => en.target.classList.toggle("motion-paused", !en.isIntersecting));
+    }, { rootMargin: "150px 0px" });
+    /* only the sections that actually have looping decoration */
+    document.querySelectorAll("#home, #about, #gallery, .marquee").forEach((el) => pauseObserver.observe(el));
+  }
 
   /* ---------------------------------------------------------------------
      HERO PARALLAX: subtle mouse-follow + scroll depth on decorative
@@ -51,7 +91,7 @@
   const heroDecor = document.getElementById("heroDecor");
   const heroLogoWrap = document.getElementById("heroLogoWrap");
 
-  if (heroSection && canHover && !prefersReducedMotion) {
+  if (heroSection && canHover) {
     let targetX = 0, targetY = 0;
     let curX = 0, curY = 0;
     let scrollOffset = 0;
@@ -102,7 +142,7 @@
      and offer cards. Desktop only, rAF-throttled, disabled for touch
      devices and prefers-reduced-motion.
   --------------------------------------------------------------------- */
-  if (canHover && !prefersReducedMotion) {
+  if (canHover) {
     const tiltCards = document.querySelectorAll(".exp-card, .offer-card");
     tiltCards.forEach((card) => {
       let ticking = false;
@@ -645,7 +685,7 @@
       t.setAttribute("aria-selected", String(isActive));
     });
     activeCategory = targetId;
-    if (btn) btn.scrollIntoView({ behavior: prefersReducedMotion ? "auto" : "smooth", block: "nearest", inline: "center" });
+    if (btn) btn.scrollIntoView({ behavior: prefersInstantScroll() ? "auto" : "smooth", block: "nearest", inline: "center" });
 
     animateMenuFilterSwitch(() => filterMenu(menuSearch.value));
   }
@@ -743,12 +783,28 @@
   /* First pictures load immediately (top priority for the first few); the
      rest stay lazy and are pre-fetched in the background (prefetchMenuImages). */
   let _menuImgIndex = 0;
-  function menuImgAttrs() {
+  /* The first pictures of EVERY row load straight away (rows show ~4-5 at a
+     time on desktop); the rest are lazy and pre-fetched in the background. */
+  function menuImgAttrs(indexInRow) {
     const n = _menuImgIndex++;
-    if (n < 4)  return 'loading="eager" fetchpriority="high" decoding="async"';
-    if (n < 12) return 'loading="eager" decoding="async"';
+    if (n < 4) return 'loading="eager" fetchpriority="high" decoding="async"';
+    if (indexInRow < 5) return 'loading="eager" decoding="async"';
     return 'loading="lazy" decoding="async"';
   }
+
+  /* Bundled photos come in two sizes: name-sm.webp (640x800) for desktop /
+     tablet tiles, name.webp (1024x1280) for sharp phone screens. Remote
+     (admin-uploaded) pictures have one size only. */
+  function smallSrc(src) {
+    return /^images\/menu\/[^/]+\.webp$/.test(String(src || "")) && !/-sm\.webp$/.test(src)
+      ? src.replace(/\.webp$/, "-sm.webp") : null;
+  }
+  function menuImgTag(src, indexInRow) {
+    const sm = smallSrc(src);
+    const set = sm ? ` srcset="${esc(sm)} 640w, ${esc(src)} 1024w" sizes="(max-width: 619px) 92vw, 280px"` : "";
+    return `<img src="${esc(src)}"${set} alt="" ${menuImgAttrs(indexInRow)} draggable="false">`;
+  }
+  const _wideScreen = window.matchMedia("(min-width: 620px)");
 
   /* Background pre-fetch: after the page has loaded, quietly download every
      menu picture (4 at a time, in menu order) so swiping never waits on the
@@ -761,7 +817,7 @@
     (menuSource || []).forEach((cat) => (cat.items || []).forEach((it) => {
       if (it.image && !/^data:/.test(it.image) && !_prefetchedImgs.has(it.image)) {
         _prefetchedImgs.add(it.image);
-        urls.push(it.image);
+        urls.push((_wideScreen.matches && smallSrc(it.image)) || it.image);
       }
     }));
     if (!urls.length) return;
@@ -791,6 +847,13 @@
   function menuChanged(src) {
     const s = menuSig(src);
     return s === null || s !== _renderedSig;
+  }
+
+  function markWhenLoaded(img) {
+    const done = () => img.classList.add("is-loaded");
+    if (img.complete && img.naturalWidth) { done(); return; }
+    img.addEventListener("load", done, { once: true });
+    img.addEventListener("error", done, { once: true });
   }
 
   function renderMenu() {
@@ -826,7 +889,7 @@
           </span>
         <div class="menu-list">
           ${cat.items
-            .map((item) => {
+            .map((item, itemIdx) => {
               const itemL10n = window.TYT_I18N ? window.TYT_I18N.translateItem(cat.id, item) : item;
               const favKey = favKeyFor(cat, item);
               const noDesc = hidesDescription(cat, item);
@@ -844,7 +907,7 @@
               data-item-icon="${esc(cat.icon)}"
               data-item-image="${esc(item.image || "")}">
               <span class="menu-item-media">
-                <span class="menu-item-icon">${item.image ? `<img src="${esc(item.image)}" alt="" ${menuImgAttrs()} draggable="false">` : iconSvg(cat.icon)}</span>
+                <span class="menu-item-icon">${item.image ? menuImgTag(item.image, itemIdx) : iconSvg(cat.icon)}</span>
                 ${badgeHtml(item)}
                 <span class="menu-item-reveal" aria-hidden="true">
                   ${favButtonHtml(favKey)}
@@ -869,6 +932,7 @@
         </div>
       `;
       menuContainer.appendChild(section);
+      section.querySelectorAll(".menu-item-icon img").forEach(markWhenLoaded);
       revealObserver.observe(section);
     });
   }
@@ -994,7 +1058,7 @@
      FILTER SWITCH ANIMATION + FILTER LOGIC
   --------------------------------------------------------------------- */
   function animateMenuFilterSwitch(applyFn) {
-    if (!menuContainer || prefersReducedMotion) { applyFn(); return; }
+    if (!menuContainer) { applyFn(); return; }
 
     const currentlyVisible = Array.from(menuContainer.querySelectorAll(".menu-item"))
       .filter((el) => el.style.display !== "none");
@@ -1072,7 +1136,7 @@
   function scrollStrip(dir) {
     if (!menuContainer) return;
     const amount = Math.max(160, menuContainer.clientWidth * 0.8);
-    menuContainer.scrollBy({ left: dir * amount, behavior: prefersReducedMotion ? "auto" : "smooth" });
+    menuContainer.scrollBy({ left: dir * amount, behavior: prefersInstantScroll() ? "auto" : "smooth" });
   }
 
   // Centre the side arrows on the row of pictures (the heading above it can vary in height).
@@ -1117,38 +1181,67 @@
      of the line stay full-size and the ones near the edges shrink, fade and
      sink a little — a smooth "wave" that follows your swipe/drag/arrows. */
   let fxTicking = false;
+  let fxAll = true;                 /* recompute every visible row next frame */
+  const fxDirty = new Set();        /* rows that were scrolled sideways */
+  const fxClean = new WeakSet();    /* rows already up to date */
   function fxApplyTo(boxEl, itemsRoot) {
     const box = boxEl.getBoundingClientRect();
-    if (!box.width || box.bottom < 0 || box.top > window.innerHeight) return;
+    if (!box.width || box.bottom < 0 || box.top > window.innerHeight) return false;
     const half = box.width / 2;
     const cx = box.left + half;
+    /* read every position first, then write — interleaving the two forced
+       a layout per picture (100+ per frame) */
+    const out = [];
     itemsRoot.querySelectorAll(".menu-item").forEach((item) => {
       if (item.style.display === "none") return;
+      const media = item.firstElementChild;
+      if (!media) return;
       const r = item.getBoundingClientRect();
       if (!r.width) return;
       const d = Math.min(1.4, Math.abs((r.left + r.width / 2 - cx) / half));
       const a = Math.min(1, d);
-      const media = item.firstElementChild;
-      if (!media) return;
       const open = item.classList.contains("is-open");
-      media.style.setProperty("--fx-s", open ? "1" : (1 - 0.14 * a * a).toFixed(3));
-      media.style.setProperty("--fx-o", open ? "1" : (1 - 0.5 * a * a).toFixed(3));
-      media.style.setProperty("--fx-y", open ? "0px" : (10 * a * a).toFixed(1) + "px");
+      out.push([media,
+        open ? "1" : (1 - 0.14 * a * a).toFixed(3),
+        open ? "1" : (1 - 0.5 * a * a).toFixed(3),
+        open ? "0px" : (10 * a * a).toFixed(1) + "px"]);
     });
+    out.forEach(([media, s, o, y]) => {
+      const key = s + "|" + o + "|" + y;
+      if (media.__fx === key) return;   /* unchanged: no style work */
+      media.__fx = key;
+      media.style.setProperty("--fx-s", s);
+      media.style.setProperty("--fx-o", o);
+      media.style.setProperty("--fx-y", y);
+    });
+    return true;
+  }
+  function fxRun(el) {
+    if (fxAll || fxDirty.has(el) || !fxClean.has(el)) {
+      if (fxApplyTo(el, el)) fxClean.add(el);
+    }
   }
   function applyScrollFx() {
-    if (!menuContainer || prefersReducedMotion) return;
+    if (!menuContainer) return;
     if (menuContainer.classList.contains("is-rows")) {
       menuContainer.querySelectorAll(".menu-category").forEach((catEl) => {
         if (catEl.style.display === "none") return;
         const list = catEl.querySelector(".menu-list");
-        if (list) fxApplyTo(list, list);
+        if (list) fxRun(list);
       });
     } else {
-      fxApplyTo(menuContainer, menuContainer);
+      fxRun(menuContainer);
     }
+    fxAll = false;
+    fxDirty.clear();
   }
-  function scheduleScrollFx() {
+  /* scheduleScrollFx()            → everything may have changed
+     scheduleScrollFx(false)       → page scrolled vertically: only rows that
+                                     just came into view need work
+     scheduleScrollFx(false, row)  → that row was scrolled sideways */
+  function scheduleScrollFx(all, row) {
+    if (all !== false) fxAll = true;
+    if (row) fxDirty.add(row);
     if (fxTicking) return;
     fxTicking = true;
     window.requestAnimationFrame(() => { fxTicking = false; applyScrollFx(); });
@@ -1162,7 +1255,7 @@
 
     menuArrowLeft.addEventListener("click", () => scrollStrip(-1));
     menuArrowRight.addEventListener("click", () => scrollStrip(1));
-    menuContainer.addEventListener("scroll", () => { scheduleStripUi(); scheduleScrollFx(); }, { passive: true });
+    menuContainer.addEventListener("scroll", () => { scheduleStripUi(); scheduleScrollFx(false, menuContainer); }, { passive: true });
 
     // Mouse: click-and-drag the strip (touch already scrolls natively).
     const DRAG_THRESHOLD = 6;
@@ -1227,10 +1320,10 @@
       e.stopPropagation();
       const listEl = btn.closest(".menu-category").querySelector(".menu-list");
       const amount = Math.max(160, listEl.clientWidth * 0.8);
-      listEl.scrollBy({ left: Number(btn.dataset.rowDir) * amount, behavior: prefersReducedMotion ? "auto" : "smooth" });
+      listEl.scrollBy({ left: Number(btn.dataset.rowDir) * amount, behavior: prefersInstantScroll() ? "auto" : "smooth" });
     });
     menuContainer.addEventListener("scroll", (e) => {
-      if (e.target !== menuContainer && e.target.classList && e.target.classList.contains("menu-list")) { syncRowArrows(e.target); scheduleScrollFx(); }
+      if (e.target !== menuContainer && e.target.classList && e.target.classList.contains("menu-list")) { syncRowArrows(e.target); scheduleScrollFx(false, e.target); }
     }, { passive: true, capture: true });
 
     let rDown = false, rDragging = false, rPid = null, rStartX = 0, rStartScroll = 0, rList = null;
@@ -1272,7 +1365,7 @@
       new ResizeObserver(() => { syncArrowY(); updateStripUi(); syncAllRowArrows(); scheduleScrollFx(); }).observe(menuStage);
     }
     window.addEventListener("resize", () => { scheduleStripUi(); syncAllRowArrows(); scheduleScrollFx(); });
-    window.addEventListener("scroll", scheduleScrollFx, { passive: true });
+    window.addEventListener("scroll", () => scheduleScrollFx(false), { passive: true });
   }
 
   function filterMenu(query, opts) {
