@@ -788,7 +788,10 @@
   function menuImgAttrs(indexInRow) {
     const n = _menuImgIndex++;
     if (n < 4) return 'loading="eager" fetchpriority="high" decoding="async"';
-    if (indexInRow < 5) return 'loading="eager" decoding="async"';
+    if (n < 10) return 'loading="eager" decoding="async"';
+    /* first tiles of the lower rows still load early, but at LOW priority so
+       they never starve the pictures the visitor sees first */
+    if (indexInRow < 5) return 'loading="eager" fetchpriority="low" decoding="async"';
     return 'loading="lazy" decoding="async"';
   }
 
@@ -849,11 +852,25 @@
     return s === null || s !== _renderedSig;
   }
 
+  /* A photo is NEVER hidden by this function (the old version kept it at
+     opacity:0 until a load event, so a missed event = a blank tile forever).
+     It only shows a shimmer while loading, fades in when done, and retries a
+     failed download up to twice (aborted / flaky-network loads). */
   function markWhenLoaded(img) {
-    const done = () => img.classList.add("is-loaded");
-    if (img.complete && img.naturalWidth) { done(); return; }
-    img.addEventListener("load", done, { once: true });
-    img.addEventListener("error", done, { once: true });
+    if (img.complete && img.naturalWidth) return;
+    img.classList.add("is-pending");
+    let tries = 0;
+    const settle = () => img.classList.remove("is-pending");
+    img.addEventListener("load", () => { settle(); img.classList.add("is-loaded"); });
+    img.addEventListener("error", () => {
+      if (tries++ >= 2) { settle(); return; }
+      setTimeout(() => {
+        const base = (img.getAttribute("src") || "").split("?")[0];
+        img.removeAttribute("srcset");
+        img.src = base + "?r=" + tries;
+      }, 700 * tries);
+    });
+    setTimeout(settle, 10000);
   }
 
   function renderMenu() {

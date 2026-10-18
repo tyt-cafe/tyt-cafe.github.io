@@ -3151,10 +3151,9 @@ html[dir="rtl"] .navbar .brand, html[dir="rtl"] .navbar.scrolled .brand { paddin
 }
 
 /* ---- menu photos: soft shimmer while loading, then fade in (never an empty tile) ---- */
-.menu-item-icon img:not(.is-loaded) { opacity: 0; }
 .menu-item-icon img.is-loaded { animation: menu-img-in 0.35s ease both; }
 @keyframes menu-img-in { from { opacity: 0; } to { opacity: 1; } }
-.menu-item-media:has(img:not(.is-loaded))::before {
+.menu-item-media:has(img.is-pending)::before {
   content: "";
   position: absolute;
   inset: 12% 22% 6%;
