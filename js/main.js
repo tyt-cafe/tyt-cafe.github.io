@@ -273,6 +273,21 @@
      no page reload needed, on both mobile and desktop. */
   let REMOTE_MENU = null;
 
+  /* Keep photos on the device across visits (see sw.js). */
+  if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname))) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("sw.js").then(() => navigator.serviceWorker.ready).then((reg) => {
+        /* hand the worker every photo already on the page so the NEXT visit is instant */
+        const send = () => {
+          const urls = [...new Set([...document.images].map((im) => im.currentSrc || im.src).filter((u) => u && u.indexOf(location.origin + "/images/") === 0))];
+          if (reg.active && urls.length) reg.active.postMessage({ type: "cache-images", urls });
+        };
+        setTimeout(send, 4000);
+        setTimeout(send, 30000);
+      }).catch(() => {});
+    }, { once: true });
+  }
+
   /* ---- Broken-image guard ----------------------------------------------
      Admin-uploaded photos live on an external storage host. If that host is
      down or blocked in the visitor's country, swap to the bundled photo of
@@ -843,9 +858,16 @@
      is already sharp on retina screens. The old srcset told phones the tile
      was 92% of the screen wide, so they downloaded the 1024px file (2x the
      bytes) for every tile. The big file is now only used in the item popup. */
-  function menuImgTag(src, indexInRow) {
+  /* Phones (tile <= 250px) get the light 480px "-xs" file, larger screens
+     the 640px "-sm" file. */
+  const _phone = window.matchMedia("(max-width: 619px)");
+  function tileSrc(src) {
     const sm = smallSrc(src);
-    return `<img src="${esc(sm || src)}" alt="" ${menuImgAttrs(indexInRow)} draggable="false">`;
+    if (!sm) return src;
+    return _phone.matches ? sm.replace(/-sm\.webp$/, "-xs.webp") : sm;
+  }
+  function menuImgTag(src, indexInRow) {
+    return `<img src="${esc(tileSrc(src))}" alt="" ${menuImgAttrs(indexInRow)} draggable="false">`;
   }
 
   /* Swipe-ahead: as soon as a category row gets near the screen, start
@@ -858,24 +880,15 @@
       en.target.querySelectorAll('img[loading="lazy"]').forEach((im) => { im.loading = "eager"; });
     });
   }, { rootMargin: "800px 0px" }) : null;
-  /* First touch / swipe / wheel anywhere on the menu: the visitor is
-     browsing, so start every remaining picture now instead of waiting for
-     each tile to scroll into view (the background pre-fetch fetches the
-     same files anyway, this just moves them to the front of the queue). */
-  let _menuWoke = false;
-  function wakeAllMenuImages() {
-    if (_menuWoke) return; _menuWoke = true;
-    menuContainer.querySelectorAll('img[loading="lazy"]').forEach((im) => { im.loading = "eager"; });
-  }
-  ["pointerdown", "touchstart", "wheel"].forEach((ev) =>
-    menuContainer && menuContainer.addEventListener(ev, wakeAllMenuImages, { passive: true }));
-  menuContainer && menuContainer.addEventListener("scroll", wakeAllMenuImages, { passive: true, capture: true });
-
   function watchRowImages(section) {
-    if (_menuWoke || !_rowLoader) { section.querySelectorAll('img[loading="lazy"]').forEach((im) => { im.loading = "eager"; }); return; }
+    if (!_rowLoader) { section.querySelectorAll('img[loading="lazy"]').forEach((im) => { im.loading = "eager"; }); return; }
     _rowLoader.observe(section);
     /* also start the moment the visitor touches / swipes the row */
-    const go = () => { section.querySelectorAll('img[loading="lazy"]').forEach((im) => { im.loading = "eager"; }); };
+    /* the row the visitor is swiping jumps to the front of the download queue */
+    const go = () => section.querySelectorAll(".menu-item-icon img").forEach((im) => {
+      if (!(im.complete && im.naturalWidth)) im.fetchPriority = "high";
+      im.loading = "eager";
+    });
     section.addEventListener("pointerdown", go, { once: true, passive: true });
     section.addEventListener("touchstart", go, { once: true, passive: true });
     section.addEventListener("scroll", go, { once: true, passive: true, capture: true });
@@ -893,7 +906,7 @@
     (menuSource || []).forEach((cat) => (cat.items || []).forEach((it) => {
       if (it.image && !/^data:/.test(it.image) && !_prefetchedImgs.has(it.image)) {
         _prefetchedImgs.add(it.image);
-        urls.push(smallSrc(it.image) || it.image); /* same file the tile shows */
+        urls.push(tileSrc(it.image)); /* same file the tile shows */
       }
     }));
     if (!urls.length) return;
@@ -903,6 +916,7 @@
       while (active < MAX && i < urls.length) {
         const im = new Image();
         im.decoding = "async";
+        im.fetchPriority = "low";
         active++;
         im.onload = im.onerror = () => { active--; pump(); };
         im.src = urls[i++];
