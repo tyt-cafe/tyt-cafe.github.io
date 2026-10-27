@@ -272,6 +272,37 @@
      the same fetch+merge logic below and re-render the live Menu/Offers —
      no page reload needed, on both mobile and desktop. */
   let REMOTE_MENU = null;
+
+  /* ---- Broken-image guard ----------------------------------------------
+     Admin-uploaded photos live on an external storage host. If that host is
+     down or blocked in the visitor's country, swap to the bundled photo of
+     the same item (images/menu/...), or to the item's icon when there is no
+     bundled copy — never show a broken-image box. Runs in the capture phase
+     so it acts before the per-image retry logic. */
+  const IMG_FALLBACK = new Map();
+  document.addEventListener("error", (e) => {
+    const img = e.target;
+    if (!(img instanceof HTMLImageElement) || img.dataset.fb === "done") return;
+    const src = img.getAttribute("src") || "";
+    let external = false;
+    try { external = new URL(src, location.href).origin !== location.origin; } catch (_) {}
+    if (!external) return; /* local files keep the normal retry */
+    e.stopPropagation();
+    img.dataset.fb = "done";
+    img.removeAttribute("srcset");
+    const local = IMG_FALLBACK.get(src.split("?")[0]);
+    if (local) { img.src = local; return; }
+    const offerMedia = img.closest(".offer-media");
+    if (offerMedia) {
+      const span = document.createElement("span");
+      span.className = "offer-icon"; span.textContent = "☕";
+      img.replaceWith(span); return;
+    }
+    const iconKey = img.dataset.icon || (img.closest("[data-item-icon]") || {}).dataset?.itemIcon;
+    const wrap = document.createElement("span");
+    wrap.innerHTML = iconSvg(iconKey || "");
+    img.replaceWith(...wrap.childNodes);
+  }, true);
   let REMOTE_OFFERS = null;
   let _fbDb = null;
   let _fsMod = null;
@@ -435,7 +466,13 @@
             ...byKey.get(key),
             ...x,
             /* keep the bundled picture unless the admin deliberately deleted it */
-            image: x.imageDeleted === true ? "" : (x.image || byKey.get(key).image || ""),
+            image: (() => {
+              const bundled = byKey.get(key).image || "";
+              if (x.imageDeleted === true) return "";
+              /* remember the bundled copy so a dead upload host never leaves a broken picture */
+              if (x.image && bundled && x.image !== bundled) IMG_FALLBACK.set(String(x.image).split("?")[0], bundled);
+              return x.image || bundled;
+            })(),
             __sourceKey: key,
             __baseName: byKey.get(key).__baseName,
             __baseCategoryId: byKey.get(key).__baseCategoryId,
@@ -988,7 +1025,7 @@
 
   function openItemModal(btn) {
     const d = btn.dataset;
-    itemModalIcon.innerHTML = d.itemImage ? `<img src="${d.itemImage}" alt="" draggable="false">` : iconSvg(d.itemIcon);
+    itemModalIcon.innerHTML = d.itemImage ? `<img src="${d.itemImage}" alt="" data-icon="${esc(d.itemIcon || "")}" draggable="false">` : iconSvg(d.itemIcon);
     itemModalCategory.textContent = d.itemCategory || "";
     itemModalName.textContent = d.itemName || "";
     itemModalDesc.textContent = d.itemDesc || tt("modal.defaultDesc", "A TYT favorite, made fresh to order.");
