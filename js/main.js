@@ -839,10 +839,46 @@
     return /^images\/menu\/[^/]+\.webp$/.test(String(src || "")) && !/-sm\.webp$/.test(src)
       ? src.replace(/\.webp$/, "-sm.webp") : null;
   }
+  /* Tiles are at most 264px wide (250px on phones), so the 640px "-sm" file
+     is already sharp on retina screens. The old srcset told phones the tile
+     was 92% of the screen wide, so they downloaded the 1024px file (2x the
+     bytes) for every tile. The big file is now only used in the item popup. */
   function menuImgTag(src, indexInRow) {
     const sm = smallSrc(src);
-    const set = sm ? ` srcset="${esc(sm)} 640w, ${esc(src)} 1024w" sizes="(max-width: 619px) 92vw, 280px"` : "";
-    return `<img src="${esc(src)}"${set} alt="" ${menuImgAttrs(indexInRow)} draggable="false">`;
+    return `<img src="${esc(sm || src)}" alt="" ${menuImgAttrs(indexInRow)} draggable="false">`;
+  }
+
+  /* Swipe-ahead: as soon as a category row gets near the screen, start
+     loading ALL its pictures (not only the first few), so swiping through
+     the row never waits on a lazy load. */
+  const _rowLoader = "IntersectionObserver" in window ? new IntersectionObserver((entries) => {
+    entries.forEach((en) => {
+      if (!en.isIntersecting) return;
+      _rowLoader.unobserve(en.target);
+      en.target.querySelectorAll('img[loading="lazy"]').forEach((im) => { im.loading = "eager"; });
+    });
+  }, { rootMargin: "800px 0px" }) : null;
+  /* First touch / swipe / wheel anywhere on the menu: the visitor is
+     browsing, so start every remaining picture now instead of waiting for
+     each tile to scroll into view (the background pre-fetch fetches the
+     same files anyway, this just moves them to the front of the queue). */
+  let _menuWoke = false;
+  function wakeAllMenuImages() {
+    if (_menuWoke) return; _menuWoke = true;
+    menuContainer.querySelectorAll('img[loading="lazy"]').forEach((im) => { im.loading = "eager"; });
+  }
+  ["pointerdown", "touchstart", "wheel"].forEach((ev) =>
+    menuContainer && menuContainer.addEventListener(ev, wakeAllMenuImages, { passive: true }));
+  menuContainer && menuContainer.addEventListener("scroll", wakeAllMenuImages, { passive: true, capture: true });
+
+  function watchRowImages(section) {
+    if (_menuWoke || !_rowLoader) { section.querySelectorAll('img[loading="lazy"]').forEach((im) => { im.loading = "eager"; }); return; }
+    _rowLoader.observe(section);
+    /* also start the moment the visitor touches / swipes the row */
+    const go = () => { section.querySelectorAll('img[loading="lazy"]').forEach((im) => { im.loading = "eager"; }); };
+    section.addEventListener("pointerdown", go, { once: true, passive: true });
+    section.addEventListener("touchstart", go, { once: true, passive: true });
+    section.addEventListener("scroll", go, { once: true, passive: true, capture: true });
   }
   const _wideScreen = window.matchMedia("(min-width: 620px)");
 
@@ -857,12 +893,12 @@
     (menuSource || []).forEach((cat) => (cat.items || []).forEach((it) => {
       if (it.image && !/^data:/.test(it.image) && !_prefetchedImgs.has(it.image)) {
         _prefetchedImgs.add(it.image);
-        urls.push((_wideScreen.matches && smallSrc(it.image)) || it.image);
+        urls.push(smallSrc(it.image) || it.image); /* same file the tile shows */
       }
     }));
     if (!urls.length) return;
     let i = 0, active = 0;
-    const MAX = 4;
+    const MAX = 6;
     const pump = () => {
       while (active < MAX && i < urls.length) {
         const im = new Image();
@@ -987,6 +1023,7 @@
       `;
       menuContainer.appendChild(section);
       section.querySelectorAll(".menu-item-icon img").forEach(markWhenLoaded);
+      watchRowImages(section);
       revealObserver.observe(section);
     });
   }
